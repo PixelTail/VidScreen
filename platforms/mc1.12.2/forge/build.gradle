@@ -20,10 +20,7 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 minecraft {
-    version = '1.12.2-14.23.5.2864'
-    runDir = 'run'
-    mappings = 'snapshot_20171003'
-    makeObfSourceJar = false
+    mappings channel: 'snapshot', version: '20171003-1.12'
 }
 
 sourceSets {
