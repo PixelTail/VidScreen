@@ -1,6 +1,17 @@
 lane: mc1.16.5
 minecraft: 1.16.5
 java_target: 8
+build_java: 17
+forge_compiler_java: 8
+verification:
+  ci:
+    run: "https://github.com/PixelTail/VidScreen/actions/runs/34158785906"
+    commit: "d64bfcbe6e6eb8038c1048e924a3900546a179b0"
+    result: success
+    runner: ubuntu-latest
+    scope: fabric_forge_paper_builds_and_fabric_unit_tests
+  local_forge_bytecode: 52
+  local_forge_native_media_bundled: false
 gradle:
   fabric: 7.6.4
   forge: 8.4
@@ -26,9 +37,9 @@ surfaces:
     status: experimental
     minecraft_forge: 1.16.5-36.2.42
     forgegradle: 6.0.54
-    build_verified: false
+    build_verified: true
+    reobfuscation_verified: true
     gates:
-      - forgegradle_1_16_5_exact_build
       - dedicated_server_classloading
       - client_render_smoke
       - two_client_sync
@@ -38,7 +49,6 @@ surfaces:
     api_snapshot: 1.16.5-R0.1-20211218.082619-371
     build_verified: true
     gates:
-      - plugin_api_compile
       - paper_runtime_plugin_message
       - persistence_and_permissions
 
@@ -47,6 +57,6 @@ media:
   reason: Java 8 native/package/license matrix is not verified; no native binaries are bundled
 
 known_risks:
-  - ForgeGradle 6.0.54 must be proven against the 1.16.5 MDK; do not silently substitute an older plugin.
+  - ForgeGradle 6.0.54 builds and reobfuscates the exact target; dedicated-server and client runtime startup remain unverified.
   - Fabric rendering names and event lifecycle are mappings-specific and need a real client smoke test.
   - Paper snapshot APIs compile a server adapter but do not prove Paper/Purpur runtime behavior.
