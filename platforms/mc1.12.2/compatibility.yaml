@@ -1,0 +1,33 @@
+lane: 1.12.2
+status: experimental
+runtime_verified: false
+media_capability: disabled
+java:
+  bytecode_target: 8
+  forge_runtime_required: 8
+minecraft: 1.12.2
+surfaces:
+  forge:
+    status: experimental
+    minecraft: 1.12.2-14.23.5.2864
+    forgegradle: 3.0.197
+    gradle: 5.6.4
+    mcp_snapshot: 20171003-1.12
+    bounded_control_transport: true
+    client_renderer_tesr_scaffold: true
+    dedicated_server_classloading_verified: false
+    render_smoke_verified: false
+  paper:
+    status: experimental
+    api: com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT
+    api_metadata_resolved: true
+    gradle: 8.4
+    bounded_plugin_channel: true
+    runtime_verified: false
+open_gates:
+  - real Java 8 ForgeGradle execution
+  - client render screenshot
+  - reconnect_dimension_chunk_lifecycle
+  - two_client_synchronization
+  - native_media_packaging
+  - Paper server integration

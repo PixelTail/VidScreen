@@ -209,4 +209,43 @@ targets:
   - minecraft: "1.12.2"
     java: 8
     primary: false
-    status: planned
+    status: experimental
+    pins:
+      forge: "1.12.2-14.23.5.2864"
+      forgegradle: "3.0.197"
+      gradle_forge: "5.6.4"
+      mcp: "20171003-1.12"
+      paper_api: "com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT"
+    platforms:
+      - surface: client-mod
+        implementation: forge
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+        notes:
+          - "Independent ForgeGradle 3.0.197 build with bounded SimpleNetworkWrapper transport, client proxy, and TESR seam."
+          - "Build requires a Java 8 runtime; current environment does not provide one."
+      - surface: server-plugin
+        implementation: paper
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Paper API 1.12.2-R0.1-SNAPSHOT resolves and packages; plugin messaging is bounded to legacy channel limits."
+    media:
+      engines:
+        - id: legacy-media-disabled
+          status: experimental
+          compile_verified: true
+          runtime_verified: false
+          notes:
+            - "No native media decoder or frame transport is included."
+    verification:
+      command: "forge\\gradlew.bat build; paper\\gradlew.bat build"
+      last_passed: "2026-09-07"
+      remaining_gates:
+        - "ForgeGradle build under Java 8"
+        - "Raw Paper/Forge legacy-channel framing adapter and cross-surface fixture"
+        - "TESR/client render screenshot and lifecycle cleanup"
+        - "Dedicated-server classloading, reconnect, dimension, chunk, and two-client synchronization tests"
+        - "Paper server integration and native media packaging"

@@ -1,0 +1,47 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'dev.vidscreen'
+version = '0.1.0-SNAPSHOT'
+
+base {
+    archivesName = 'vidscreen-paper-1.12.2'
+}
+
+repositories {
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java.srcDirs = [
+            'src/main/java',
+            '../../../shared/domain/src/main/java',
+            '../../../shared/protocol/src/main/java'
+        ]
+    }
+    test {
+        java.srcDirs = [
+            'src/test/java',
+            '../shared/src/test/java'
+        ]
+    }
+}
+
+dependencies {
+    compileOnly 'com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

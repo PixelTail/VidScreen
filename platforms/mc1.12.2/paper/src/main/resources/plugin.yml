@@ -1,0 +1,9 @@
+name: VidScreen
+version: '0.1.0-SNAPSHOT'
+main: dev.vidscreen.paperlegacy.VidScreenPaperLegacy
+author: vidscreen
+load: STARTUP
+permissions:
+  vidscreen.manage:
+    description: Manage VidScreen control metadata
+    default: op

@@ -100,6 +100,9 @@ platforms/
     server-paper/
     fabric/
     neoforge/
+  mc1.12.2/                         independent Java 8 legacy stretch lane
+    forge/
+    paper/
   mc1.21.x/
   mc1.20.1/
 compatibility/
@@ -206,6 +209,12 @@ For every lower lane:
 7. Publish as `experimental` before promoting to `supported`.
 
 If a lane requires weakening URL security, protocol bounds, cleanup guarantees, or testability, it remains unsupported rather than contaminating newer lanes.
+
+### 5.3 Validated legacy toolchain discovery
+
+The 1.12.2 stretch lane is independent: ForgeGradle 3.0.197 pins Gradle 5.6.4 and MCP `20171003-1.12`, while the separately resolved Paper API build uses Gradle 8.4. The legacy Gradle/Groovy toolchain requires a real Java 8 execution environment; a modern JDK cannot be silently substituted for runtime support.
+
+The lane reuses the Java 8-compatible shared domain/protocol sources where practical, bounds its legacy control transports before allocation, and keeps renderer/texture/TESR classes out of dedicated-server paths. Native media remains disabled: no JavaCPP/JavaCV/FFmpeg binaries are bundled until an exact Java 8 package, license, and cleanup matrix passes. A successful compile or API package build changes a target to `experimental` only; it never changes the runtime support claim.
 
 ## 6. Media-engine decision and remaining gate
 

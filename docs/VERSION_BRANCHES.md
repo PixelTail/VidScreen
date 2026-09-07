@@ -14,7 +14,7 @@ VidScreen keeps protocol and product behavior aligned while allowing incompatibl
 | `version/1.19.2` | 1.19.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.16.5` | 1.16.5 | 8 runtime target | Paper-family, Fabric, Forge | feasibility |
-| `version/1.12.2` | 1.12.2 | 8 | Paper/Spigot, Forge | stretch feasibility |
+| `version/1.12.2` | 1.12.2 | 8 | Paper/Spigot, Forge | experimental feasibility scaffold |
 
 A planned branch is not created or published as a compatibility claim. It is created when it contains at least a pinned, independently buildable scaffold or a checked-in feasibility result explaining why a surface cannot yet build.
 
@@ -39,4 +39,4 @@ A planned branch is not created or published as a compatibility claim. It is cre
 
 ## Current repository
 
-The GitHub repository is `https://github.com/PixelTail/VidScreen`. `main`, `version/26.2`, and `version/26.1.2` were initialized from the first tested source baseline. Older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.
+The GitHub repository is `https://github.com/PixelTail/VidScreen`. The independent `version/1.12.2` feasibility branch is initialized alongside the modern branches; other older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.

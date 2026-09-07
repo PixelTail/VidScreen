@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "vidscreen",
+    "name": "VidScreen",
+    "description": "Experimental synchronized client-rendered video screens.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["vidscreen"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
