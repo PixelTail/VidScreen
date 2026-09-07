@@ -47,4 +47,4 @@ jobs:
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Build experimental ${{ matrix.name }} lane
         working-directory: ${{ matrix.directory }}
-        run: ./gradlew --no-daemon build
+        run: bash ./gradlew --no-daemon build
