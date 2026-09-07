@@ -42,6 +42,15 @@ dependencies {
     implementation(project(":shared-core"))
 }
 
+// ForgeGradle synthesizes underscore-prefixed configurations whose native Netty
+// modules differ by runner OS. Keep SHA-256 verification enabled, but do not apply
+// a Windows-generated lock state to those generated configurations on Linux.
+configurations.configureEach {
+    if (name.startsWith("_")) {
+        resolutionStrategy.deactivateDependencyLocking()
+    }
+}
+
 tasks.named<Jar>("jar") {
     finalizedBy("reobfJar")
 }
