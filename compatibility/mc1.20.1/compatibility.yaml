@@ -49,6 +49,19 @@ platforms:
       notes:
         - "Uses Forge SimpleChannel and RenderLevelStageEvent.AFTER_ENTITIES."
         - "Dynamic textures use DynamicTexture/NativeImage; dedicated server code has no client imports."
+verification:
+  ci:
+    run: "https://github.com/PixelTail/VidScreen/actions/runs/34144307127"
+    commit: "7f58a09b400c32c831eb7d398aaad2ed0ec97007"
+    result: success
+    runner: ubuntu-22.04
+    java: 17
+    scope: shared_tests_and_paper_fabric_forge_builds
+  build_memory:
+    max_heap: 3G
+    max_workers: 2
+    parallel_projects: false
+    forge_separate_invocation: true
 gates:
   build_java17_and_dependency_locks: passed_2026-09-07
   shared_unit_tests: passed
