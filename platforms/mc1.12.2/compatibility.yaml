@@ -26,6 +26,7 @@ surfaces:
     runtime_verified: false
 open_gates:
   - real Java 8 ForgeGradle execution
+  - raw Paper_Forge_channel_framing_interoperability
   - client render screenshot
   - reconnect_dimension_chunk_lifecycle
   - two_client_synchronization
