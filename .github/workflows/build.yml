@@ -1,8 +1,8 @@
 name: build
 
 on:
-  # Dispatch only after the exact lane passes locally. Experimental branch pushes
-  # must not consume CI or create misleading failures automatically.
+  # Trigger deliberately when CI adds useful clean/cross-platform coverage.
+  # Use only standard runners covered by free public-repository Actions.
   workflow_dispatch:
 
 permissions:

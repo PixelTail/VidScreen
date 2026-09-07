@@ -25,7 +25,7 @@ A planned branch is not created or published as a compatibility claim. It is cre
 3. Platform source may be copied when Minecraft APIs differ. Do not hide incompatible render, networking, loader, mapping, or scheduler APIs behind reflection merely to reduce files.
 4. Backport shared fixes by cherry-picking focused commits. Do not merge an old version branch wholesale into a newer one.
 5. Each branch pins its own Minecraft, Java, Gradle, loader/API, mappings, and plugin coordinates and carries its own dependency locks or equivalent reproducibility metadata.
-6. Branch CI builds only the surfaces declared by that branch. Workflows use manual dispatch while lanes are experimental and are triggered only after the exact local toolchain build passes; branch pushes do not start Actions automatically.
+6. Branch CI builds only the surfaces declared by that branch. Experimental workflows use deliberate manual dispatch: trigger them when clean or cross-platform coverage adds useful confidence, including when an exact toolchain is unavailable locally. Use only standard runners covered by free public-repository Actions, then wait for and inspect the result; branch pushes do not start Actions automatically.
 7. Client media bytes remain off the Minecraft server in every branch. Native media and client renderer classes remain absent from dedicated-server artifacts.
 8. `planned`, `experimental`, and `supported` retain their definitions from `compatibility/targets.yaml`. A branch name or successful compile does not imply runtime support.
 
