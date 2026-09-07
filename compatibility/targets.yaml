@@ -1,5 +1,5 @@
 schema: 1
-updated: "2026-09-04"
+updated: "2026-09-07"
 protocol:
   major: 1
   minor: 0
@@ -106,7 +106,10 @@ targets:
           runtime_verified: false
     verification:
       command: ".\\gradlew.bat build"
-      last_passed: "2026-09-02"
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34137909502"
+      ci_commit: "ed6f77e1d02a79145e6ce32c4b6eabc479479c07"
+      ci_runners: [ubuntu-latest, windows-latest]
       remaining_gates:
         - "Purpur and dedicated Fabric/NeoForge server runtime startup"
         - "Fabric/NeoForge client startup with runtime companion on Windows; native runtime loading and client startup on Linux"
@@ -179,34 +182,113 @@ targets:
           runtime_verified: false
     verification:
       command: ".\\gradlew.bat build"
-      last_passed: "2026-09-04"
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34137909502"
+      ci_commit: "ed6f77e1d02a79145e6ce32c4b6eabc479479c07"
+      ci_runners: [ubuntu-latest, windows-latest]
       remaining_gates:
         - "Paper/Purpur and dedicated Fabric/NeoForge server runtime startup"
         - "Fabric/NeoForge client startup and direct HTTPS MP4/HLS playback"
         - "Render screenshot, lifecycle/resource soak, and two-client synchronization evidence"
         - "Linux native load, secure media connection boundary, spatial audio, and final native packaging/license gates"
 
-  - minecraft: "1.21.x"
+  - minecraft: "1.21.1"
     java: 21
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.21.1"
+    build_verified: true
+    build_surfaces: [paper, fabric, neoforge, media-runtime-fabric, media-runtime-neoforge]
+    runtime_verified: false
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34141874572"
+      commit: "32acce3490f6396493c61fab54418b853aa58794"
+      runner: ubuntu-latest
+    notes:
+      - "Branch-local pins and detailed gates live in compatibility/targets.yaml on version/1.21.1."
+      - "No native-load, playback, render, or dedicated-server runtime claim."
   - minecraft: "1.20.1"
     java: 17
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.20.1"
+    build_verified: true
+    build_surfaces: [paper, fabric, forge]
+    runtime_verified: false
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34144307127"
+      commit: "7f58a09b400c32c831eb7d398aaad2ed0ec97007"
+      runner: ubuntu-22.04
+    notes:
+      - "Branch-local pins and gates live in compatibility/mc1.20.1/compatibility.yaml."
+      - "Shared tests passed; Forge uses OS-specific locks and a separate bounded-memory build invocation."
   - minecraft: "1.19.2"
     java: 17
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.19.2"
+    build_verified: true
+    build_surfaces: [paper, fabric, forge]
+    runtime_verified: false
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34111464983"
+      commit: "58cf4b82e507083db4a596ed8e5796c0c16d6935"
+    notes:
+      - "Independent Gradle 8.6/Java 17 lane; exact runtime gates remain open."
   - minecraft: "1.18.2"
     java: 17
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.18.2"
+    build_verified: true
+    build_surfaces: [paper, fabric, forge]
+    runtime_verified: false
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34111605266"
+      commit: "86d057eb76e0f8595023502cfc4c0cb88da60911"
+    notes:
+      - "ForgeGradle 5.1.77 requires an isolated Gradle 7.6.4 build; Fabric/Paper use Gradle 8.6."
   - minecraft: "1.16.5"
     java: 8
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.16.5"
+    build_verified: true
+    build_surfaces: [paper, fabric, forge]
+    runtime_verified: false
+    build_java: 17
+    forge_compiler_java: 8
+    media_capability: disabled
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34158785906"
+      commit: "d64bfcbe6e6eb8038c1048e924a3900546a179b0"
+      runner: ubuntu-latest
+    notes:
+      - "Branch-local pins and gates live in platforms/mc1.16.5/compatibility.yaml."
+      - "Java 8 target is distinct from Java 17 build JVM; no legacy media or runtime support claim."
   - minecraft: "1.12.2"
     java: 8
     primary: false
-    status: planned
+    status: experimental
+    branch: "version/1.12.2"
+    build_verified: true
+    build_surfaces: [paper, forge]
+    runtime_verified: false
+    build_java:
+      forge: 8
+      paper: 17
+    media_capability: disabled
+    verification:
+      last_passed: "2026-09-07"
+      ci_run: "https://github.com/PixelTail/VidScreen/actions/runs/34158692032"
+      commit: "f4f1e7bfd438521b68903d89629df7f59084580a"
+      runner: ubuntu-latest
+    notes:
+      - "Branch-local pins and gates live in platforms/mc1.12.2/compatibility.yaml."
+      - "Paper uses the pre-1.13 VIDSCREEN channel; raw Paper-to-Forge framing interoperability remains unverified."
+      - "No legacy media or runtime support claim."

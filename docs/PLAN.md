@@ -3,7 +3,7 @@
 Status: active implementation; 26.2 compile/unit-test baseline is green, runtime support is not yet claimed  
 Primary target: Minecraft 26.2  
 Porting direction: newest to oldest  
-Last updated: 2026-09-04
+Last updated: 2026-09-07
 
 ## 1. Product goal
 
@@ -40,6 +40,27 @@ As of 2026-09-02:
 - both clients sample the server clock, reconcile authoritative playback, apply periodic drift correction, upload RGBA frames to dynamic textures, and submit textured world-space quads through their 26.2 render APIs;
 - Bilibili, YouTube, and Twitch source resolution is implemented behind `MediaResolver` through an optional external yt-dlp executable; it remains experimental until fixture, legal, expiry/re-resolution, and live-stream tests pass;
 - no platform/version combination is yet marked `supported`: runtime video, redirect/DNS-rebinding defenses, audio, resource-soak tests, two-client synchronization measurements, exact native-license audit, minimized per-platform packaging, and release packaging remain open.
+
+### 2.2 Cross-version clean-build checkpoint
+
+As of 2026-09-07, the requested downward expansion has separate experimental
+`version/<minecraft>` branches through 1.12.2. This is build/feasibility work,
+not a replacement for the 26.2 runtime-first release gates. Exact tested commits
+and Actions links are recorded in `compatibility/targets.yaml` and
+`docs/VERSION_BRANCHES.md`.
+
+Validated build constraints:
+
+- A clean checkout must include the shared server sources: runtime directory ignores are root-anchored so Java packages named `server` are not silently omitted.
+- Strict dependency verification includes platform-specific Linux natives and Maven metadata; missing hashes are checked against upstream bytes, not bypassed.
+- Forge 1.20.1 needs OS-specific dependency locks. Fabric/Paper and Forge run in separate invocations with a 3 GiB heap and at most two workers to avoid source-remapping heap exhaustion.
+- A Java 8 output target does not mean all build tools run on Java 8. Fabric 1.16.5 Loom needs Java 16+, so CI uses Java 17; Paper also uses Java 17 with `--release 8`. Forge 1.16.5 uses a Java 17 build JVM and a real Java 8 toolchain, without passing `--release` to javac 8. Forge 1.12.2 uses Java 8/Gradle 5.6.4 and ForgeGradle 3 mappings syntax.
+- Legacy Forge API names must come from the exact patched/mapped JAR. Compiling and reobfuscating a renderer scaffold does not validate in-game rendering or Paper-to-Forge framing interoperability.
+- Actions remain manual-only. Use standard free public-repository runners when clean/exact-toolchain coverage is useful, wait for the result, and retain failures as evidence until fixed. No larger/paid runners are authorized.
+
+The next release-critical work remains the modern runtime/media/security and
+synchronization gates, not more version expansion. Legacy media is disabled
+where the Java 8 native/package/license matrix has not passed.
 
 ## 3. Scope
 
@@ -185,11 +206,11 @@ Thresholds are selected from measurements, not hard-coded from the planning docu
 |---|---|---:|---|---|---|---|
 | A | 26.2 | 25 | Paper/Purpur; Folia validation | Fabric, NeoForge | Fabric, NeoForge | primary |
 | B | 26.1.2 | 25 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | experimental compile/package lane |
-| C | 1.21.x | 21 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | planned |
-| D | 1.20.1 | 17 | Paper/Purpur | Fabric, Forge | Fabric, Forge | planned |
-| E | 1.19.2, 1.18.2 | 17 | Paper-family feasibility | Fabric, Forge | Fabric, Forge | feasibility |
-| F | 1.16.5 | 8 | Paper/Spigot feasibility | Fabric, Forge | Fabric, Forge | stretch |
-| G | 1.12.2 | 8 | Spigot/Paper legacy feasibility | Forge | Forge | stretch |
+| C | 1.21.1 | 21 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | experimental branch; build passed |
+| D | 1.20.1 | 17 | Paper/Purpur | Fabric, Forge | Fabric, Forge | experimental branch; build passed |
+| E | 1.19.2, 1.18.2 | 17 | Paper-family feasibility | Fabric, Forge | Fabric, Forge | experimental branches; builds passed |
+| F | 1.16.5 | 8 target | Paper/Spigot feasibility | Fabric, Forge | Fabric, Forge | experimental scaffold; build passed |
+| G | 1.12.2 | 8 target | Spigot/Paper legacy feasibility | Forge | Forge | experimental scaffold; build passed |
 
 The table is a roadmap, not a compatibility claim.
 
