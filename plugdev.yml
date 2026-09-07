@@ -1,0 +1,37 @@
+type: plugin
+server: paper
+version: "26.2"
+port: 25565
+build:
+  system: gradle
+  task: build
+  jarTask: jar
+  module: platforms/mc26.2/server-paper
+  jarPattern: platforms/mc26.2/server-paper/build/libs/*.jar
+client:
+  launcher: auto
+  offline: false
+  offlineName: DevPlayer
+  joinOnReady: true
+  players:
+    - name: Tester2
+      mode: bot
+jvm:
+  memory: 1G
+run:
+  cleanup: never
+dev:
+  gamemode: creative
+  world: void
+  op: true
+  peaceful: true
+  onlineMode: false
+deps: []
+watch:
+  paths:
+    - platforms:mc26.2:server-paper/src/
+  configs:
+    - config.yml
+  debounceMs: 300
+  reload:
+    java: safe

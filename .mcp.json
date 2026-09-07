@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "minecraft-dev": {
+      "command": ".tools/node-v22.23.2-win-x64/node.exe",
+      "args": [
+        "node_modules/@mcdxai/minecraft-dev-mcp/dist/index.js"
+      ],
+      "env": {
+        "JAVA_HOME": ".tools/jdk-25.0.4.1+1",
+        "PATH": ".tools/jdk-25.0.4.1+1/bin;${PATH}"
+      }
+    },
+    "plugdev": {
+      "command": ".tools/node-v22.23.2-win-x64/node.exe",
+      "args": [
+        "node_modules/@plugdev/mcp/dist/index.js"
+      ],
+      "env": {
+        "PLUGDEV_PROJECT_ROOT": ".",
+        "JAVA_HOME": ".tools/jdk-25.0.4.1+1",
+        "PATH": ".tools/jdk-25.0.4.1+1/bin;${PATH}"
+      }
+    }
+  }
+}

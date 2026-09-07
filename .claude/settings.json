@@ -1,0 +1,7 @@
+{
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "minecraft-dev",
+    "plugdev"
+  ]
+}

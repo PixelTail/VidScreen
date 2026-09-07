@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen",
+  "version": "0.1.0-SNAPSHOT",
+  "name": "VidScreen",
+  "description": "Synchronized in-world video screens.",
+  "authors": ["VidScreen Contributors"],
+  "license": "Apache-2.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.vidscreen.fabric.VidScreenFabric"],
+    "client": ["dev.vidscreen.fabric.client.VidScreenFabricClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": ">=0.158.0+26.2"
+  },
+  "recommends": {
+    "vidscreen_media_runtime": ">=0.1.0-SNAPSHOT"
+  }
+}

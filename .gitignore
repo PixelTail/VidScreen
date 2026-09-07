@@ -1,0 +1,42 @@
+# Gradle and Java
+.gradle/
+**/build/
+**/out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Runtime/test servers
+run/
+runs/
+server/
+test-server/
+logs/
+crash-reports/
+world/
+world_nether/
+world_the_end/
+
+# Project-local tools and caches
+.tools/
+.plugdev/
+.cache/
+node_modules/
+.claude/mcp/node_modules/
+.claude/settings.local.json
+
+# Native/media artifacts
+*.dll
+*.dylib
+*.so
+*.mp4
+*.mkv
+*.webm
+*.m3u8
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
