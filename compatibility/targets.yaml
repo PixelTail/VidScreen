@@ -251,6 +251,13 @@ targets:
     verification:
       command: ".\\gradlew.bat -Pvidscreen.targetLane=mc1.21.1 :platforms:mc1.21.1:fabric:build :platforms:mc1.21.1:neoforge:build :platforms:mc1.21.1:server-paper:build :platforms:mc1.21.1:media-runtime-fabric:build :platforms:mc1.21.1:media-runtime-neoforge:build --no-configuration-cache"
       last_passed: "2026-09-07"
+      ci:
+        run: "https://github.com/PixelTail/VidScreen/actions/runs/34141874572"
+        commit: "32acce3490f6396493c61fab54418b853aa58794"
+        result: success
+        runner: ubuntu-latest
+        java: 21
+        scope: exact_platform_and_media_runtime_builds
       remaining_gates:
         - "Paper, Fabric dedicated-server, NeoForge dedicated-server, and integrated runtime startup"
         - "Fabric WorldRenderEvents and NeoForge RenderLevelStageEvent screenshot smoke tests"
