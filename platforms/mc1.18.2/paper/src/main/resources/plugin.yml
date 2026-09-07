@@ -1,0 +1,15 @@
+name: VidScreenLegacy
+version: 0.1.0-experimental
+main: dev.vidscreen.legacy.paper.PaperLegacyPlugin
+api-version: '1.18'
+author: VidScreen contributors
+description: Experimental server-only VidScreen feasibility scaffold for Minecraft 1.18.2
+commands:
+  vidscreen:
+    description: Report the legacy VidScreen lane status
+    usage: /vidscreen status
+    permission: vidscreen.status
+permissions:
+  vidscreen.status:
+    description: View VidScreen lane status
+    default: true

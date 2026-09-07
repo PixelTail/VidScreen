@@ -9,10 +9,10 @@ VidScreen keeps protocol and product behavior aligned while allowing incompatibl
 | `main` | newest integration baseline | 25 | shared protocol plus validated modern lanes | active |
 | `version/26.2` | 26.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
 | `version/26.1.2` | 26.1.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
-| `version/1.21.11` | 1.21.11 | 21 | Paper/Purpur, Fabric, NeoForge | planned |
+| `version/1.21.1` | 1.21.1 | 21 | Paper/Purpur, Fabric, NeoForge | planned |
 | `version/1.20.1` | 1.20.1 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.19.2` | 1.19.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
-| `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
+| `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | experimental scaffold; Java 17 lane build is pinned and isolated |
 | `version/1.16.5` | 1.16.5 | 8 runtime target | Paper-family, Fabric, Forge | feasibility |
 | `version/1.12.2` | 1.12.2 | 8 | Paper/Spigot, Forge | stretch feasibility |
 
@@ -25,7 +25,7 @@ A planned branch is not created or published as a compatibility claim. It is cre
 3. Platform source may be copied when Minecraft APIs differ. Do not hide incompatible render, networking, loader, mapping, or scheduler APIs behind reflection merely to reduce files.
 4. Backport shared fixes by cherry-picking focused commits. Do not merge an old version branch wholesale into a newer one.
 5. Each branch pins its own Minecraft, Java, Gradle, loader/API, mappings, and plugin coordinates and carries its own dependency locks or equivalent reproducibility metadata.
-6. Branch CI builds only the surfaces declared by that branch. `version/**` pushes are included in the workflow trigger, but legacy branches may replace the workflow with a toolchain-specific matrix.
+6. Branch CI builds only the surfaces declared by that branch. The modern root workflow listens only to `main`, `version/26.2`, and `version/26.1.2`; each legacy branch carries a toolchain-specific workflow.
 7. Client media bytes remain off the Minecraft server in every branch. Native media and client renderer classes remain absent from dedicated-server artifacts.
 8. `planned`, `experimental`, and `supported` retain their definitions from `compatibility/targets.yaml`. A branch name or successful compile does not imply runtime support.
 
@@ -39,4 +39,4 @@ A planned branch is not created or published as a compatibility claim. It is cre
 
 ## Current repository
 
-The GitHub repository is `https://github.com/PixelTail/VidScreen`. `main`, `version/26.2`, and `version/26.1.2` were initialized from the first tested source baseline. Older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.
+The GitHub repository is `https://github.com/PixelTail/VidScreen`. `main`, `version/26.2`, and `version/26.1.2` were initialized from the first tested source baseline. The 1.18.2 lane is represented by an isolated experimental scaffold; other older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.

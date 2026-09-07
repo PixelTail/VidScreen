@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="MIT"
+issueTrackerURL="https://github.com/PixelTail/VidScreen/issues"
+
+[[mods]]
+modId="vidscreen"
+version="0.1.0-experimental"
+displayName="VidScreen Legacy Feasibility"
+description='Bounded VidScreen protocol scaffold for Minecraft 1.18.2.'
+
+[[dependencies.vidscreen]]
+modId="forge"
+mandatory=true
+versionRange="[40.3.11,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.vidscreen]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.18.2,1.19)"
+ordering="NONE"
+side="BOTH"
