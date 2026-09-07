@@ -1,18 +1,15 @@
 name: build
 
 on:
-  push:
-    branches:
-      - main
-      - "version/**"
-  pull_request:
+  # Trigger deliberately when CI adds useful clean/cross-platform coverage.
+  # Use only standard runners covered by free public-repository Actions.
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.workflow }}-${{ github.ref }}
+  group: mc1.21.1-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,30 +24,24 @@ jobs:
 
   build:
     needs: wrapper-validation
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            java: "25"
-            command: bash ./gradlew build
-          - os: windows-latest
-            java: "25"
-            command: .\gradlew.bat build
-          - os: ubuntu-latest
-            java: "21"
-            command: bash ./gradlew -Pvidscreen.targetLane=mc1.21.1 :platforms:mc1.21.1:fabric:build :platforms:mc1.21.1:neoforge:build :platforms:mc1.21.1:server-paper:build :platforms:mc1.21.1:media-runtime-fabric:build :platforms:mc1.21.1:media-runtime-neoforge:build --no-configuration-cache
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up Java 25
+      - name: Set up Java 21
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: "21"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-      - name: Build and test
-        run: ${{ matrix.command }}
+      - name: Build exact platform lane
+        run: >-
+          bash ./gradlew -Pvidscreen.targetLane=mc1.21.1
+          :platforms:mc1.21.1:fabric:build
+          :platforms:mc1.21.1:neoforge:build
+          :platforms:mc1.21.1:server-paper:build
+          :platforms:mc1.21.1:media-runtime-fabric:build
+          :platforms:mc1.21.1:media-runtime-neoforge:build
+          --no-configuration-cache
