@@ -18,9 +18,9 @@ final class LegacyForgeTextureManager implements AutoCloseable {
     void ensureTexture() {
         if (texture == null) {
             texture = new DynamicTexture(1, 1, false);
-            texture.getTextureData().setPixelRGBA(0, 0, 0xFFFFFFFF);
-            texture.uploadTexture();
-            textureManager.loadTexture(id, texture);
+            texture.getPixels().setPixelRGBA(0, 0, 0xFFFFFFFF);
+            texture.upload();
+            textureManager.register(id, texture);
         }
     }
 
@@ -31,7 +31,8 @@ final class LegacyForgeTextureManager implements AutoCloseable {
     @Override
     public void close() {
         if (texture != null) {
-            texture.deleteGlTexture();
+            texture.close();
+            textureManager.release(id);
             texture = null;
         }
     }

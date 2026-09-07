@@ -52,6 +52,6 @@ public final class VidScreenForgeLegacy {
         if (payload == null || payload.length > ForgeControlPayload.MAX_BYTES) {
             throw new IllegalArgumentException("Invalid VidScreen payload");
         }
-        CHANNEL.sendTo(new ForgeControlPayload(payload), player.connection.netManager, net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_CLIENT);
+        CHANNEL.sendTo(new ForgeControlPayload(payload), player.connection.getConnection(), net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_CLIENT);
     }
 }
