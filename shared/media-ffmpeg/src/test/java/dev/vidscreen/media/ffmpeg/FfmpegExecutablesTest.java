@@ -16,6 +16,8 @@ class FfmpegExecutablesTest {
     void discoversExplicitlyConfiguredExecutables() throws Exception {
         Path ffmpeg = Files.createFile(temporaryDirectory.resolve("ffmpeg.exe"));
         Path ffprobe = Files.createFile(temporaryDirectory.resolve("ffprobe.exe"));
+        assertTrue(ffmpeg.toFile().setExecutable(true));
+        assertTrue(ffprobe.toFile().setExecutable(true));
         String previousFfmpeg = System.getProperty("vidscreen.ffmpeg");
         String previousFfprobe = System.getProperty("vidscreen.ffprobe");
         try {
