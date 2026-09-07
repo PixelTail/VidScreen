@@ -1,0 +1,16 @@
+VidScreen Media Runtime third-party notice
+
+This experimental client-only runtime contains JavaCPP 1.5.14, JavaCV 1.5.14,
+and the standard (non-GPL-variant) JavaCPP Presets FFmpeg 8.1.2-1.5.14
+artifacts for Windows x86-64 and Linux x86-64.
+
+Upstream projects and license texts:
+- JavaCPP: https://github.com/bytedeco/javacpp
+- JavaCV: https://github.com/bytedeco/javacv
+- JavaCPP Presets: https://github.com/bytedeco/javacpp-presets
+- FFmpeg: https://ffmpeg.org/legal.html
+
+The build intentionally does not use the ffmpeg-platform-gpl artifact. This
+notice does not replace the release license audit, reproducible minimal-runtime
+build, or source-offer work required before VidScreen can mark a package as
+supported.

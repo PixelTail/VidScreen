@@ -9,6 +9,14 @@ pluginManagement {
 
 rootProject.name = "vidscreen"
 
+val targetLane = providers.gradleProperty("vidscreen.targetLane").orNull
+
+fun includeLaneProject(projectPath: String, lane: String) {
+    if (targetLane == null || targetLane == lane) {
+        include(projectPath)
+    }
+}
+
 include(
     "shared:client-core",
     "shared:domain",
@@ -18,15 +26,13 @@ include(
     "shared:media-ffmpeg-native",
     "shared:media-ytdlp",
     "shared:server-core",
-    "shared:testkit",
-    "platforms:mc26.2:server-paper",
-    "platforms:mc26.2:media-runtime-fabric",
-    "platforms:mc26.2:media-runtime-neoforge",
-    "platforms:mc26.2:fabric",
-    "platforms:mc26.2:neoforge",
-    "platforms:mc26.1.2:server-paper",
-    "platforms:mc26.1.2:media-runtime-fabric",
-    "platforms:mc26.1.2:media-runtime-neoforge",
-    "platforms:mc26.1.2:fabric",
-    "platforms:mc26.1.2:neoforge"
+    "shared:testkit"
 )
+
+listOf("mc26.2", "mc26.1.2", "mc1.21.1").forEach { lane ->
+    includeLaneProject("platforms:$lane:server-paper", lane)
+    includeLaneProject("platforms:$lane:media-runtime-fabric", lane)
+    includeLaneProject("platforms:$lane:media-runtime-neoforge", lane)
+    includeLaneProject("platforms:$lane:fabric", lane)
+    includeLaneProject("platforms:$lane:neoforge", lane)
+}

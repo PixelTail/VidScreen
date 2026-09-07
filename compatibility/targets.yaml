@@ -1,5 +1,5 @@
 schema: 1
-updated: "2026-09-04"
+updated: "2026-09-07"
 protocol:
   major: 1
   minor: 0
@@ -185,6 +185,77 @@ targets:
         - "Fabric/NeoForge client startup and direct HTTPS MP4/HLS playback"
         - "Render screenshot, lifecycle/resource soak, and two-client synchronization evidence"
         - "Linux native load, secure media connection boundary, spatial audio, and final native packaging/license gates"
+
+  - minecraft: "1.21.1"
+    java: 21
+    primary: false
+    status: experimental
+    pins:
+      paper_api: "1.21.1-R0.1-SNAPSHOT"
+      fabric_loom: "1.10.5"
+      fabric_mappings: "1.21.1+build.3:v2"
+      fabric_loader: "0.19.5"
+      fabric_api: "0.116.17+1.21.1"
+      neoforge: "21.1.250"
+      moddevgradle: "2.0.146"
+    platforms:
+      - surface: server-plugin
+        implementation: paper
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Paper API is pinned to 1.21.1-R0.1-SNAPSHOT; runtime launch is not claimed."
+      - surface: client-mod
+        implementation: fabric
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Uses Yarn 1.21.1+build.3:v2, CustomPayload/PacketCodec, WorldRenderEvents, and dynamic textures."
+      - surface: server-mod
+        implementation: fabric
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+      - surface: client-mod
+        implementation: neoforge
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Uses 1.21.1 CustomPacketPayload and RenderLevelStageEvent."
+      - surface: server-mod
+        implementation: neoforge
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+    media:
+      engines:
+        - id: native-ffmpeg-javacpp
+          status: experimental
+          compile_verified: true
+          package_verified: true
+          native_load_verified:
+            windows_x86_64: false
+            linux_x86_64: false
+          runtime_verified: false
+        - id: external-ffmpeg
+          status: experimental
+          compile_verified: true
+          runtime_verified: false
+        - id: external-ytdlp
+          status: experimental
+          compile_verified: true
+          runtime_verified: false
+    verification:
+      command: ".\\gradlew.bat -Pvidscreen.targetLane=mc1.21.1 :platforms:mc1.21.1:fabric:build :platforms:mc1.21.1:neoforge:build :platforms:mc1.21.1:server-paper:build :platforms:mc1.21.1:media-runtime-fabric:build :platforms:mc1.21.1:media-runtime-neoforge:build --no-configuration-cache"
+      last_passed: "2026-09-07"
+      remaining_gates:
+        - "Paper, Fabric dedicated-server, NeoForge dedicated-server, and integrated runtime startup"
+        - "Fabric WorldRenderEvents and NeoForge RenderLevelStageEvent screenshot smoke tests"
+        - "Direct HTTPS MP4/HLS playback, native load, cleanup soak, and spatial audio"
+        - "Reconnect, dimension, chunk visibility, secure media connection boundary, and two-client synchronization"
 
   - minecraft: "1.21.x"
     java: 21

@@ -1,0 +1,24 @@
+license="Apache-2.0 AND LGPL-2.1-or-later"
+
+[[mods]]
+modId="vidscreen_media_runtime"
+version="0.1.0-SNAPSHOT"
+displayName="VidScreen Media Runtime"
+authors="VidScreen Contributors"
+description='''
+Client-only in-process media decoding runtime for VidScreen.
+'''
+
+[[dependencies.vidscreen_media_runtime]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.250,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.vidscreen_media_runtime]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="CLIENT"

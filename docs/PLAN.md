@@ -3,7 +3,7 @@
 Status: active implementation; 26.2 compile/unit-test baseline is green, runtime support is not yet claimed  
 Primary target: Minecraft 26.2  
 Porting direction: newest to oldest  
-Last updated: 2026-09-04
+Last updated: 2026-09-07
 
 ## 1. Product goal
 
@@ -39,6 +39,8 @@ As of 2026-09-02:
 - client adapters prefer the bundled native runtime when installed and retain user-supplied external FFmpeg as a development fallback; the full Gradle build passes with this integration;
 - both clients sample the server clock, reconcile authoritative playback, apply periodic drift correction, upload RGBA frames to dynamic textures, and submit textured world-space quads through their 26.2 render APIs;
 - Bilibili, YouTube, and Twitch source resolution is implemented behind `MediaResolver` through an optional external yt-dlp executable; it remains experimental until fixture, legal, expiry/re-resolution, and live-stream tests pass;
+- an exact Minecraft 1.21.1 experimental lane is being ported with Java 21 bytecode, Fabric Loader 0.19.5, Fabric API 0.116.17+1.21.1, Fabric Loom 1.10.5 plus Yarn 1.21.1+build.3, NeoForge 21.1.250, ModDevGradle 2.0.146, and Paper API 1.21.1-R0.1-SNAPSHOT; it has separate Fabric `CustomPayload`/`PacketCodec` and `WorldRenderEvents` seams plus NeoForge `CustomPacketPayload` and `RenderLevelStageEvent` seams;
+- no 1.21.1 combination is runtime verified or supported; dedicated-server classloading, render smoke, media, lifecycle, security-boundary, native cleanup, and two-client gates remain open;
 - no platform/version combination is yet marked `supported`: runtime video, redirect/DNS-rebinding defenses, audio, resource-soak tests, two-client synchronization measurements, exact native-license audit, minimized per-platform packaging, and release packaging remain open.
 
 ## 3. Scope
@@ -100,7 +102,12 @@ platforms/
     server-paper/
     fabric/
     neoforge/
-  mc1.21.x/
+  mc1.21.1/                          Java 21 experimental downward-port lane
+    media-runtime-fabric/
+    media-runtime-neoforge/
+    server-paper/
+    fabric/
+    neoforge/
   mc1.20.1/
 compatibility/
   targets.yaml                     planned/experimental/supported matrix
@@ -185,7 +192,7 @@ Thresholds are selected from measurements, not hard-coded from the planning docu
 |---|---|---:|---|---|---|---|
 | A | 26.2 | 25 | Paper/Purpur; Folia validation | Fabric, NeoForge | Fabric, NeoForge | primary |
 | B | 26.1.2 | 25 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | experimental compile/package lane |
-| C | 1.21.x | 21 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | planned |
+| C | 1.21.1 | 21 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | experimental compile/package lane |
 | D | 1.20.1 | 17 | Paper/Purpur | Fabric, Forge | Fabric, Forge | planned |
 | E | 1.19.2, 1.18.2 | 17 | Paper-family feasibility | Fabric, Forge | Fabric, Forge | feasibility |
 | F | 1.16.5 | 8 | Paper/Spigot feasibility | Fabric, Forge | Fabric, Forge | stretch |
@@ -414,7 +421,7 @@ Exit criteria:
 
 ### Phase 9 — Downward ports
 
-Minecraft 26.1.2 is now present as the first exact downward compile/package lane; see ADR 0006. It remains experimental until its runtime gates pass. Continue with 1.21.x only after the 26.2 runtime vertical slice remains the reference behavior and the 26.1.2 runtime delta is measured.
+Minecraft 26.1.2 is now present as the first exact downward compile/package lane, and Minecraft 1.21.1 is present as the next Java 21 experimental lane; see ADR 0006 and the lane README. Both remain experimental until their runtime gates pass. Continue with 1.20.1 only after the 26.2 reference behavior and these lower-lane API deltas are measured.
 
 Port subsequent waves C through G. Each lane gets its own feasibility note, build pins, adapter changes, CI matrix, and promotion gate. Prioritize versions with active server populations and maintainable native media support rather than maximizing a number on the project page.
 

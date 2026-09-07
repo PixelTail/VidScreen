@@ -8,6 +8,8 @@ plugins {
     base
 }
 
+val targetLane = providers.gradleProperty("vidscreen.targetLane").orNull
+
 allprojects {
     group = "dev.vidscreen"
     version = "0.1.0-SNAPSHOT"
@@ -26,16 +28,18 @@ subprojects {
 
     plugins.withType<JavaPlugin> {
         extensions.configure<JavaPluginExtension> {
-            toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+            toolchain.languageVersion.set(JavaLanguageVersion.of(
+                if (targetLane == "mc1.21.1" || project.path.startsWith(":platforms:mc1.21.1")) 21 else 25
+            ))
             withSourcesJar()
         }
 
         tasks.withType<JavaCompile>().configureEach {
-            if (project.path.startsWith(":shared")) {
-                options.release.set(8)
-            } else {
-                options.release.set(25)
-            }
+            options.release.set(when {
+                project.path.startsWith(":shared") -> 8
+                project.path.startsWith(":platforms:mc1.21.1") -> 21
+                else -> 25
+            })
             options.encoding = "UTF-8"
         }
 

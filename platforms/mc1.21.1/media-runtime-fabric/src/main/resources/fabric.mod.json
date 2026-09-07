@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen_media_runtime",
+  "version": "0.1.0-SNAPSHOT",
+  "name": "VidScreen Media Runtime",
+  "description": "Client-only in-process media decoding runtime for VidScreen.",
+  "authors": ["VidScreen Contributors"],
+  "license": ["Apache-2.0", "LGPL-2.1-or-later"],
+  "environment": "client",
+  "depends": {
+    "fabricloader": "=0.19.5",
+    "minecraft": "=1.21.1",
+    "java": ">=21"
+  }
+}
