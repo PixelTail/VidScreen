@@ -9,18 +9,15 @@
 .vscode/
 
 # Runtime/test servers
-run/
-runs/
-server/
-!shared/server-core/
-!shared/server-core/src/
-!shared/server-core/src/**
-test-server/
-logs/
-crash-reports/
-world/
-world_nether/
-world_the_end/
+/run/
+/runs/
+/server/
+/test-server/
+/logs/
+/crash-reports/
+/world/
+/world_nether/
+/world_the_end/
 
 # Project-local tools and caches
 .tools/

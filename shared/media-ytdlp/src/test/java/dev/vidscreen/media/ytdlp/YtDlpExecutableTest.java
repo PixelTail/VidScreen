@@ -15,6 +15,7 @@ class YtDlpExecutableTest {
     @Test
     void discoversExplicitlyConfiguredExecutable() throws Exception {
         Path executable = Files.createFile(temporaryDirectory.resolve("yt-dlp.exe"));
+        assertTrue(executable.toFile().setExecutable(true));
         String previous = System.getProperty("vidscreen.ytdlp");
         try {
             System.setProperty("vidscreen.ytdlp", executable.toString());
