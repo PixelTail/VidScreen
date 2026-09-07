@@ -36,9 +36,14 @@ jobs:
           java-version: "17"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-      - name: Build shared core and exact platform lane
+      - name: Build shared, Paper, and Fabric lanes
         working-directory: compatibility/mc1.20.1
-        run: bash ./gradlew --no-daemon --stacktrace :shared-core:test :paper:build :fabric:build :forge:build
+        run: >-
+          bash ./gradlew --no-daemon --stacktrace
+          :shared-core:test :paper:build :fabric:build
+      - name: Build Forge lane
+        working-directory: compatibility/mc1.20.1
+        run: bash ./gradlew --no-daemon --stacktrace :forge:build
       - name: Upload experimental artifacts
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
