@@ -5,12 +5,25 @@ media_capability: disabled
 java:
   bytecode_target: 8
   forge_runtime_required: 8
+  forge_build: 8
+  paper_build: 17
+verification:
+  ci:
+    run: "https://github.com/PixelTail/VidScreen/actions/runs/34158692032"
+    commit: "f4f1e7bfd438521b68903d89629df7f59084580a"
+    result: success
+    runner: ubuntu-latest
+    scope: forge_build_reobfuscation_and_paper_build_tests
+  local_forge_bytecode: 52
+  local_forge_native_media_bundled: false
 minecraft: 1.12.2
 surfaces:
   forge:
     status: experimental
     minecraft: 1.12.2-14.23.5.2864
     forgegradle: 3.0.197
+    build_verified: true
+    reobfuscation_verified: true
     gradle: 5.6.4
     mcp_snapshot: 20171003-1.12
     bounded_control_transport: true
@@ -21,11 +34,11 @@ surfaces:
     status: experimental
     api: com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT
     api_metadata_resolved: true
+    build_verified: true
     gradle: 8.4
     bounded_plugin_channel: true
     runtime_verified: false
 open_gates:
-  - real Java 8 ForgeGradle execution
   - raw Paper_Forge_channel_framing_interoperability
   - client render screenshot
   - reconnect_dimension_chunk_lifecycle

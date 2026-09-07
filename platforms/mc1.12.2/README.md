@@ -15,7 +15,7 @@ This directory is an independent, experimental Gradle lane for the 1.12.2 feasib
 | Paper API | `com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT` | metadata resolves from Paper repository |
 | Paper Gradle wrapper | `8.4` | independent server-only build |
 
-The Forge wrapper uses the requested MCP snapshot and exact Forge coordinate. The Paper API is compile-only; no Paper server binary is bundled. Build with a JDK appropriate for the pinned wrapper. This environment has no JDK 8 installed, so a ForgeGradle execution failure caused by the missing Java 8 runtime must not be reported as runtime support.
+The Forge wrapper uses the requested MCP snapshot and exact Forge coordinate. The Paper API is compile-only; no Paper server binary is bundled. Forge builds on Java 8 with Gradle 5.6.4; Paper builds on Java 17 with Gradle 8.4 and `--release 8`. Both targets remain Java 8. Exact local Forge compilation and reobfuscation passed, followed by the [Linux Forge and Paper CI build](https://github.com/PixelTail/VidScreen/actions/runs/34158692032). These are build gates, not runtime support.
 
 ## Scope and isolation
 
@@ -31,8 +31,8 @@ This lane is **experimental**. A dependency resolution or Java compilation resul
 ## Commands
 
 ```text
-forge\\gradlew.bat build
-paper\\gradlew.bat build
+forge\gradlew.bat -p forge --no-daemon build
+paper\gradlew.bat -p paper --no-daemon build
 ```
 
-Run the Forge build with a real Java 8 installation for the legacy Gradle/ForgeGradle combination. The Paper build only compiles the plugin against the resolved API snapshot. Do not commit `run/`, Gradle caches, extracted natives, worlds, or generated binaries.
+Run these commands from this directory, setting `JAVA_HOME` to Java 8 for Forge and Java 17 for Paper. On Linux use `bash forge/gradlew -p forge --no-daemon build` and `bash paper/gradlew -p paper --no-daemon build`. The Paper build compiles the plugin and runs its unit tests against the resolved API snapshot; it does not launch a server. Do not commit `run/`, Gradle caches, extracted natives, worlds, or generated binaries.
