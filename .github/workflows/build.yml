@@ -4,8 +4,13 @@ on:
   push:
     branches:
       - main
-      - "version/**"
+      - version/26.2
+      - version/26.1.2
   pull_request:
+    branches:
+      - main
+      - version/26.2
+      - version/26.1.2
   workflow_dispatch:
 
 permissions:

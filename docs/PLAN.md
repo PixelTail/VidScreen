@@ -40,7 +40,7 @@ As of 2026-09-02:
 - both clients sample the server clock, reconcile authoritative playback, apply periodic drift correction, upload RGBA frames to dynamic textures, and submit textured world-space quads through their 26.2 render APIs;
 - Bilibili, YouTube, and Twitch source resolution is implemented behind `MediaResolver` through an optional external yt-dlp executable; it remains experimental until fixture, legal, expiry/re-resolution, and live-stream tests pass;
 - no platform/version combination is yet marked `supported`: runtime video, redirect/DNS-rebinding defenses, audio, resource-soak tests, two-client synchronization measurements, exact native-license audit, minimized per-platform packaging, and release packaging remain open;
-- the 1.18.2 Java 17 feasibility lane has isolated Gradle builds for Fabric, Forge, and Paper with bounded legacy transport adapters; exact local build verification and all runtime gates remain pending, so this is not a support claim.
+- the 1.18.2 Java 17 feasibility lane has isolated Gradle builds for Fabric, Forge, and Paper with bounded legacy transport adapters; its exact local builds pass with Gradle 8.6 for Fabric/Paper and Gradle 7.6.4 for Forge, while branch CI and all runtime gates remain pending, so this is not a support claim.
 
 ## 3. Scope
 

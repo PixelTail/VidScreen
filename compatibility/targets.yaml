@@ -1,5 +1,5 @@
 schema: 1
-updated: "2026-09-04"
+updated: "2026-09-07"
 protocol:
   major: 1
   minor: 0
@@ -210,44 +210,44 @@ targets:
       forge: "1.18.2-40.3.11"
       forge_gradle: "5.1.77"
       paper_api: "1.18.2-R0.1-SNAPSHOT"
-      gradle: "8.6"
+      gradle: "8.6 (Fabric/Paper); 7.6.4 (ForgeGradle 5.1.77)"
     platforms:
       - surface: server-plugin
         implementation: paper
         status: experimental
-        build_verified: false
+        build_verified: true
         runtime_verified: false
         notes:
-          - "Pinned server-only Paper scaffold; exact build verification is required in Java 17 CI."
+          - "Exact Java 17 local build passed; branch CI and runtime verification remain open."
       - surface: client-mod
         implementation: fabric
         status: experimental
-        build_verified: false
+        build_verified: true
         runtime_verified: false
         notes:
           - "Bounded legacy Identifier/PacketByteBuf adapter is present; rendering and media remain a feasibility gate."
       - surface: server-mod
         implementation: fabric
         status: experimental
-        build_verified: false
+        build_verified: true
         runtime_verified: false
       - surface: client-mod
         implementation: forge
         status: experimental
-        build_verified: false
+        build_verified: true
         runtime_verified: false
         notes:
           - "Bounded Forge SimpleChannel adapter is present; client rendering and media remain a feasibility gate."
       - surface: server-mod
         implementation: forge
         status: experimental
-        build_verified: false
+        build_verified: true
         runtime_verified: false
     verification:
-      command: "gradle --no-daemon -p platforms/mc1.18.2 clean build"
-      last_passed: null
+      command: "gradle --no-daemon -p platforms/mc1.18.2 clean build && gradle --no-daemon -p platforms/mc1.18.2/forge clean build"
+      last_passed: "2026-09-07"
       remaining_gates:
-        - "Java 17 / Gradle 8.6 clean build in CI"
+        - "Java 17 clean builds in branch CI with Gradle 8.6 and 7.6.4"
         - "Dedicated-server classloading and startup for Paper, Fabric, and Forge"
         - "Legacy client render smoke test, texture lifecycle, and screenshot evidence"
         - "Direct HTTPS media playback, audio, reconnect, dimension, and source-change tests"

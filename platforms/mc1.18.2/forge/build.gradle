@@ -1,3 +1,5 @@
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
@@ -8,11 +10,32 @@ buildscript {
     }
 }
 
+apply plugin: 'java-library'
 apply plugin: 'net.minecraftforge.gradle'
 
-base {
-    archivesName = 'vidscreen-forge-1.18.2'
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
 }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs(
+            '../../../shared/domain/src/main/java',
+            '../../../shared/protocol/src/main/java',
+            '../../../shared/media-api/src/main/java',
+            '../../../shared/client-core/src/main/java',
+            '../../../shared/server-core/src/main/java'
+        )
+    }
+}
+
 
 minecraft {
     mappings channel: 'official', version: '1.18.2'
@@ -43,12 +66,9 @@ minecraft {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.3.11'
-    implementation project(':shared')
 }
 
 tasks.named('jar') {
-    dependsOn project(':shared').tasks.named('classes')
-    from project(':shared').sourceSets.main.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     finalizedBy 'reobfJar'
 }

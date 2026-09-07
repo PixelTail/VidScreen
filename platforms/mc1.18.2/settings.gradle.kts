@@ -8,4 +8,4 @@ pluginManagement {
 }
 
 rootProject.name = "vidscreen-mc1.18.2"
-include(":shared", ":fabric", ":forge", ":paper")
+include(":shared", ":fabric", ":paper")
