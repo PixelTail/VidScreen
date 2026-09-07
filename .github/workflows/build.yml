@@ -1,11 +1,8 @@
 name: build
 
 on:
-  push:
-    branches:
-      - main
-      - "version/**"
-  pull_request:
+  # Dispatch only after the exact lane passes locally. Experimental branch pushes
+  # must not consume CI or create misleading failures automatically.
   workflow_dispatch:
 
 permissions:
