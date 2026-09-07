@@ -24,7 +24,7 @@ public final class FabricControlPayload {
 
     public static byte[] read(PacketByteBuf buffer) {
         int length = buffer.readVarInt();
-        if (length < 0 || length > MAX_BYTES || length > buffer.readableBytes()) {
+        if (length < 0 || length > MAX_BYTES || length != buffer.readableBytes()) {
             throw new IllegalArgumentException("Invalid VidScreen payload length: " + length);
         }
         byte[] payload = new byte[length];

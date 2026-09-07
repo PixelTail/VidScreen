@@ -32,7 +32,7 @@ public final class ForgeControlPayload {
 
     public void decode(PacketBuffer buffer) {
         int length = buffer.readVarInt();
-        if (length < 0 || length > MAX_BYTES || length > buffer.readableBytes()) {
+        if (length < 0 || length > MAX_BYTES || length != buffer.readableBytes()) {
             throw new IllegalArgumentException("Invalid VidScreen payload length: " + length);
         }
         byte[] next = new byte[length];
