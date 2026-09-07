@@ -9,7 +9,7 @@ VidScreen keeps protocol and product behavior aligned while allowing incompatibl
 | `main` | newest integration baseline | 25 | shared protocol plus validated modern lanes | active |
 | `version/26.2` | 26.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
 | `version/26.1.2` | 26.1.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
-| `version/1.21.11` | 1.21.11 | 21 | Paper/Purpur, Fabric, NeoForge | planned |
+| `version/1.21.1` | 1.21.1 | 21 | Paper/Purpur, Fabric, NeoForge | planned |
 | `version/1.20.1` | 1.20.1 | 17 | Paper/Purpur, Fabric, Forge | experimental |
 | `version/1.19.2` | 1.19.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
