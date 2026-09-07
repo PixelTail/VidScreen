@@ -25,7 +25,7 @@ A planned branch is not created or published as a compatibility claim. It is cre
 3. Platform source may be copied when Minecraft APIs differ. Do not hide incompatible render, networking, loader, mapping, or scheduler APIs behind reflection merely to reduce files.
 4. Backport shared fixes by cherry-picking focused commits. Do not merge an old version branch wholesale into a newer one.
 5. Each branch pins its own Minecraft, Java, Gradle, loader/API, mappings, and plugin coordinates and carries its own dependency locks or equivalent reproducibility metadata.
-6. Branch CI builds only the surfaces declared by that branch. `version/**` pushes are included in the workflow trigger, but legacy branches may replace the workflow with a toolchain-specific matrix.
+6. Branch CI builds only the surfaces declared by that branch. The modern root workflow listens only to `main`, `version/26.2`, and `version/26.1.2`; each legacy branch carries a toolchain-specific workflow.
 7. Client media bytes remain off the Minecraft server in every branch. Native media and client renderer classes remain absent from dedicated-server artifacts.
 8. `planned`, `experimental`, and `supported` retain their definitions from `compatibility/targets.yaml`. A branch name or successful compile does not imply runtime support.
 
