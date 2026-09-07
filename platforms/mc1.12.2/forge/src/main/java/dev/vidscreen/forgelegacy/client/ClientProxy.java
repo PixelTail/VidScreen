@@ -3,7 +3,7 @@ package dev.vidscreen.forgelegacy.client;
 import dev.vidscreen.forgelegacy.CommonProxy;
 import dev.vidscreen.forgelegacy.ForgeControlPayload;
 import dev.vidscreen.forgelegacy.LegacyScreenTileEntity;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;

@@ -19,7 +19,7 @@ final class LegacyForgeTextureManager implements AutoCloseable {
         if (texture != null) {
             return;
         }
-        texture = new DynamicTexture(1, 1, false);
+        texture = new DynamicTexture(1, 1);
         texture.getTextureData()[0] = 0xFFFFFFFF;
         texture.updateDynamicTexture();
         textureManager.loadTexture(id, texture);
