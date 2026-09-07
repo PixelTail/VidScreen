@@ -1,12 +1,8 @@
 name: Minecraft 1.16.5 lane
 
 on:
-  push:
-    branches:
-      - version/1.16.5
-  pull_request:
-    branches:
-      - version/1.16.5
+  # Trigger deliberately when CI adds useful exact-Java-8 coverage.
+  # Use only standard runners covered by free public-repository Actions.
   workflow_dispatch:
 
 permissions:
