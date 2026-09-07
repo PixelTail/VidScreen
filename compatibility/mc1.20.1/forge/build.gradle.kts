@@ -1,3 +1,4 @@
+import java.util.Locale
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.language.jvm.tasks.ProcessResources
 
@@ -7,6 +8,12 @@ plugins {
 
 base {
     archivesName.set("vidscreen-forge-1.20.1")
+}
+
+if (System.getProperty("os.name", "").lowercase(Locale.ROOT).contains("linux")) {
+    dependencyLocking {
+        lockFile = file("gradle-linux.lockfile")
+    }
 }
 
 minecraft {
@@ -40,15 +47,6 @@ minecraft {
 dependencies {
     minecraft("net.minecraftforge:forge:1.20.1-47.4.23")
     implementation(project(":shared-core"))
-}
-
-// ForgeGradle synthesizes underscore-prefixed configurations whose native Netty
-// modules differ by runner OS. Keep SHA-256 verification enabled, but do not apply
-// a Windows-generated lock state to those generated configurations on Linux.
-configurations.configureEach {
-    if (name.startsWith("_")) {
-        resolutionStrategy.deactivateDependencyLocking()
-    }
 }
 
 tasks.named<Jar>("jar") {
