@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen",
+  "version": "0.1.0-experimental",
+  "name": "VidScreen Legacy Feasibility",
+  "description": "Bounded VidScreen protocol scaffold for Minecraft 1.19.2.",
+  "authors": ["VidScreen contributors"],
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.vidscreen.legacy.fabric.VidScreenFabric"],
+    "client": ["dev.vidscreen.legacy.fabric.VidScreenFabricClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "fabric-api": ">=0.77.0+1.19.2",
+    "minecraft": "1.19.2"
+  }
+}

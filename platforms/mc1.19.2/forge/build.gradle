@@ -1,0 +1,46 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.54'
+}
+
+base {
+    archivesName = 'vidscreen-forge-1.19.2'
+}
+
+minecraft {
+    mappings channel: 'official', version: '1.19.2'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                vidscreen {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                vidscreen {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.19.2-43.5.1'
+    implementation project(':shared')
+}
+
+tasks.named('jar') {
+    dependsOn project(':shared').tasks.named('classes')
+    from project(':shared').sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    finalizedBy 'reobfJar'
+}

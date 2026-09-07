@@ -197,7 +197,58 @@ targets:
   - minecraft: "1.19.2"
     java: 17
     primary: false
-    status: planned
+    status: experimental
+    pins:
+      fabric_loader: "0.19.5"
+      fabric_api: "0.77.0+1.19.2"
+      yarn: "1.19.2+build.28"
+      fabric_loom: "1.6.12"
+      forge: "1.19.2-43.5.1"
+      forge_gradle: "6.0.54"
+      paper_api: "1.19.2-R0.1-SNAPSHOT"
+      gradle: "8.6"
+    platforms:
+      - surface: server-plugin
+        implementation: paper
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+        notes:
+          - "Pinned server-only Paper scaffold; exact build verification is required in Java 17 CI."
+      - surface: client-mod
+        implementation: fabric
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+        notes:
+          - "Bounded legacy Identifier/PacketByteBuf adapter is present; rendering and media remain a feasibility gate."
+      - surface: server-mod
+        implementation: fabric
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+      - surface: client-mod
+        implementation: forge
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+        notes:
+          - "Bounded Forge SimpleChannel adapter is present; client rendering and media remain a feasibility gate."
+      - surface: server-mod
+        implementation: forge
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+    verification:
+      command: "gradle --no-daemon -p platforms/mc1.19.2 clean build"
+      last_passed: null
+      remaining_gates:
+        - "Java 17 / Gradle 8.6 clean build in CI"
+        - "Dedicated-server classloading and startup for Paper, Fabric, and Forge"
+        - "Legacy client render smoke test, texture lifecycle, and screenshot evidence"
+        - "Direct HTTPS media playback, audio, reconnect, dimension, and source-change tests"
+        - "Two-client synchronization and native cleanup tests"
+
   - minecraft: "1.18.2"
     java: 17
     primary: false
