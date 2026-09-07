@@ -31,6 +31,10 @@ dependencies {
     implementation(project(":shared:server-core"))
 }
 
+tasks.named("compileJava") {
+    dependsOn(project(":shared:server-core").tasks.named("classes"))
+}
+
 tasks.jar {
     dependsOn(
         project(":shared:domain").tasks.named("classes"),

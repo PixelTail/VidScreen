@@ -35,6 +35,12 @@ dependencies {
     runtimeContents("org.bytedeco:javacv:$javaCppVersion") { isTransitive = false }
 }
 
+configurations.configureEach {
+    if (name.startsWith("neoFormRuntimeDependencies")) {
+        resolutionStrategy.deactivateDependencyLocking()
+    }
+}
+
 tasks.jar {
     dependsOn(project(":shared:media-ffmpeg-native").tasks.named("classes"))
     from(project(":shared:media-ffmpeg-native")

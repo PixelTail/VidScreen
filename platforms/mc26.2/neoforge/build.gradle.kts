@@ -41,6 +41,12 @@ dependencies {
     implementation(project(":shared:server-core"))
 }
 
+configurations.configureEach {
+    if (name.startsWith("neoFormRuntimeDependencies")) {
+        resolutionStrategy.deactivateDependencyLocking()
+    }
+}
+
 tasks.jar {
     dependsOn(
         project(":shared:domain").tasks.named("classes"),
