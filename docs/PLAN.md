@@ -111,7 +111,7 @@ docs/
   security/
 ```
 
-The root coordinates Gradle composite builds but does not force every version lane to share one Loom/ModDevGradle/ForgeGradle classpath.
+The root coordinates the currently compatible modern builds. Toolchain generations that cannot safely share Gradle, Java, Loom, ModDevGradle, or ForgeGradle run from independent `version/<minecraft>` Git branches as defined in `docs/VERSION_BRANCHES.md`; do not force them into one fragile buildscript.
 
 ### 4.2 Shared-code constraints
 

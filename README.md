@@ -23,6 +23,7 @@ All combinations remain **experimental** or **planned**. The full 26.2 + 26.1.2 
 See:
 
 - [`docs/PLAN.md`](docs/PLAN.md) — authoritative implementation sequence and validated checkpoint;
+- [`docs/VERSION_BRANCHES.md`](docs/VERSION_BRANCHES.md) — branch-per-version policy and release flow;
 - [`compatibility/targets.yaml`](compatibility/targets.yaml) — machine-readable support status;
 - [`docs/adr/`](docs/adr/) — architecture decisions;
 - [`docs/TOOLING.md`](docs/TOOLING.md) — reproducible tooling, bundled media runtime, fallback executable discovery, and advisories.
