@@ -1,0 +1,13 @@
+name: VidScreen
+version: 0.1.0-SNAPSHOT
+main: dev.vidscreen.paperlegacy.VidScreenPaperLegacy
+api-version: '1.16'
+author: VidScreen contributors
+description: Experimental synchronized video screens for Minecraft 1.16.5
+commands:
+  vidscreen:
+    description: VidScreen legacy lane control command placeholder
+    usage: /vidscreen
+permissions:
+  vidscreen.manage:
+    default: op

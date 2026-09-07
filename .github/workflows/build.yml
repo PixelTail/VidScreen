@@ -49,3 +49,34 @@ jobs:
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Build and test
         run: ${{ matrix.command }}
+
+  legacy-builds:
+    needs: wrapper-validation
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: mc1.16.5-fabric
+            directory: platforms/mc1.16.5/fabric
+            java: "8"
+          - name: mc1.16.5-forge
+            directory: platforms/mc1.16.5/forge
+            java: "8"
+          - name: mc1.16.5-paper
+            directory: platforms/mc1.16.5/paper
+            java: "8"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - name: Build experimental legacy lane
+        working-directory: ${{ matrix.directory }}
+        run: ./gradlew build --no-daemon

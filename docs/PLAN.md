@@ -3,7 +3,7 @@
 Status: active implementation; 26.2 compile/unit-test baseline is green, runtime support is not yet claimed  
 Primary target: Minecraft 26.2  
 Porting direction: newest to oldest  
-Last updated: 2026-09-04
+Last updated: 2026-09-07
 
 ## 1. Product goal
 
@@ -100,6 +100,10 @@ platforms/
     server-paper/
     fabric/
     neoforge/
+  mc1.16.5/                         independent Java 8 legacy feasibility lane
+    fabric/
+    forge/
+    paper/
   mc1.21.x/
   mc1.20.1/
 compatibility/
@@ -206,6 +210,12 @@ For every lower lane:
 7. Publish as `experimental` before promoting to `supported`.
 
 If a lane requires weakening URL security, protocol bounds, cleanup guarantees, or testability, it remains unsupported rather than contaminating newer lanes.
+
+### 5.3 Validated legacy toolchain discovery
+
+The 1.16.5 feasibility lane must remain independent per loader surface. Fabric Loom 0.10.7 calls the Gradle archive classifier API removed by Gradle 8, while the 1.16.5 ForgeGradle 6.0.54 candidate uses the Gradle 8.4-era path; they cannot safely share one wrapper. The lane therefore uses Gradle 7.6.4 for Fabric and Gradle 8.4 for Forge/Paper.
+
+The lane reuses the Java 8-compatible shared domain/protocol sources where practical, bounds its legacy control transports before allocation, and keeps renderer/texture classes out of dedicated-server paths. Native media remains disabled: no JavaCPP/JavaCV/FFmpeg binaries are bundled until an exact Java 8 package, license, and cleanup matrix passes. A successful compile or API package build changes a target to `experimental` only; it never changes the runtime support claim.
 
 ## 6. Media-engine decision and remaining gate
 

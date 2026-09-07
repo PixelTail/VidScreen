@@ -1,0 +1,47 @@
+plugins {
+    id 'fabric-loom' version '0.10.7'
+    id 'maven-publish'
+}
+
+group = 'dev.vidscreen'
+version = '0.1.0-SNAPSHOT'
+
+base {
+    archivesName = 'vidscreen-fabric-1.16.5'
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java.srcDirs = [
+            'src/main/java',
+            '../../../shared/domain/src/main/java',
+            '../../../shared/protocol/src/main/java'
+        ]
+    }
+    test {
+        java.srcDir '../shared/src/test/java'
+    }
+}
+
+dependencies {
+    minecraft 'com.mojang:minecraft:1.16.5'
+    mappings 'net.fabricmc:yarn:1.16.5+build.10:v2'
+    modImplementation 'net.fabricmc:fabric-loader:0.11.7'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.42.0+1.16'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

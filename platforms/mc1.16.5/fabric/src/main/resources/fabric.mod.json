@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen",
+  "version": "0.1.0-SNAPSHOT",
+  "name": "VidScreen",
+  "description": "Experimental synchronized video screens for Minecraft 1.16.5",
+  "authors": ["VidScreen contributors"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.vidscreen.fabriclegacy.VidScreenFabricLegacy"],
+    "client": ["dev.vidscreen.fabriclegacy.client.VidScreenFabricLegacyClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.11.7",
+    "fabric": "*",
+    "minecraft": "1.16.5"
+  }
+}

@@ -1,5 +1,5 @@
 schema: 1
-updated: "2026-09-04"
+updated: "2026-09-07"
 protocol:
   major: 1
   minor: 0
@@ -205,8 +205,51 @@ targets:
   - minecraft: "1.16.5"
     java: 8
     primary: false
-    status: planned
-  - minecraft: "1.12.2"
-    java: 8
-    primary: false
-    status: planned
+    status: experimental
+    pins:
+      forge: "1.16.5-36.2.42"
+      forgegradle: "6.0.54"
+      fabric_loader: "0.11.7"
+      fabric_loom: "0.10.7"
+      yarn: "1.16.5+build.10:v2"
+      fabric_api: "0.42.0+1.16"
+      paper_api: "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
+    platforms:
+      - surface: client-mod
+        implementation: fabric
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Independent Gradle 7.6.4 build; the requested Loom 0.10.7 does not run on Gradle 8.4."
+          - "Bounded custom payload, client-only texture/event seam; world-quad screenshot remains open."
+      - surface: client-mod
+        implementation: forge
+        status: experimental
+        build_verified: false
+        runtime_verified: false
+        notes:
+          - "ForgeGradle 6.0.54 setup reaches MCP processing but this environment has no Java 8 toolchain for its merge step."
+      - surface: server-plugin
+        implementation: paper
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Paper API compile and packaging pass; plugin channel carries bounded control metadata only."
+    media:
+      engines:
+        - id: legacy-media-disabled
+          status: experimental
+          compile_verified: true
+          runtime_verified: false
+          notes:
+            - "No JavaCPP/JavaCV/FFmpeg natives are bundled; external or disabled media remains the only validated policy."
+    verification:
+      command: "fabric\\gradlew.bat build; forge\\gradlew.bat build; paper\\gradlew.bat build"
+      last_passed: "2026-09-07"
+      remaining_gates:
+        - "ForgeGradle MCP merge with a real Java 8 runtime"
+        - "Fabric and Forge client render screenshot"
+        - "Dedicated-server classloading, reconnect, dimension, chunk, and two-client synchronization tests"
+        - "Native media packaging and cleanup verification"

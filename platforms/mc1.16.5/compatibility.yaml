@@ -1,0 +1,52 @@
+lane: mc1.16.5
+minecraft: 1.16.5
+java_target: 8
+gradle:
+  fabric: 7.6.4
+  forge: 8.4
+  paper: 8.4
+status: experimental
+support_claim: false
+
+surfaces:
+  fabric:
+    status: experimental
+    loader: 0.11.7
+    loom: 0.10.7
+    mappings: 1.16.5+build.10:v2
+    fabric_api: 0.42.0+1.16
+    build_verified: true
+    gates:
+      - protocol_fixture_replay
+      - fabric_server_classloading
+      - client_render_smoke
+      - reconnect_dimension_chunk_lifecycle
+      - two_client_sync
+  forge:
+    status: experimental
+    minecraft_forge: 1.16.5-36.2.42
+    forgegradle: 6.0.54
+    build_verified: false
+    gates:
+      - forgegradle_1_16_5_exact_build
+      - dedicated_server_classloading
+      - client_render_smoke
+      - two_client_sync
+  paper:
+    status: experimental
+    api: com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT
+    api_snapshot: 1.16.5-R0.1-20211218.082619-371
+    build_verified: true
+    gates:
+      - plugin_api_compile
+      - paper_runtime_plugin_message
+      - persistence_and_permissions
+
+media:
+  status: disabled
+  reason: Java 8 native/package/license matrix is not verified; no native binaries are bundled
+
+known_risks:
+  - ForgeGradle 6.0.54 must be proven against the 1.16.5 MDK; do not silently substitute an older plugin.
+  - Fabric rendering names and event lifecycle are mappings-specific and need a real client smoke test.
+  - Paper snapshot APIs compile a server adapter but do not prove Paper/Purpur runtime behavior.

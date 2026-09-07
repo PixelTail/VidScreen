@@ -13,7 +13,7 @@ VidScreen keeps protocol and product behavior aligned while allowing incompatibl
 | `version/1.20.1` | 1.20.1 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.19.2` | 1.19.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
-| `version/1.16.5` | 1.16.5 | 8 runtime target | Paper-family, Fabric, Forge | feasibility |
+| `version/1.16.5` | 1.16.5 | 8 runtime target | Paper-family, Fabric, Forge | experimental feasibility scaffold |
 | `version/1.12.2` | 1.12.2 | 8 | Paper/Spigot, Forge | stretch feasibility |
 
 A planned branch is not created or published as a compatibility claim. It is created when it contains at least a pinned, independently buildable scaffold or a checked-in feasibility result explaining why a surface cannot yet build.
