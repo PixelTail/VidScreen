@@ -1,7 +1,8 @@
 name: build
 
 on:
-  # Dispatch only after both exact Java 17 builds pass locally.
+  # Trigger deliberately when CI adds useful clean/cross-platform coverage.
+  # Use only standard runners covered by free public-repository Actions.
   workflow_dispatch:
 
 permissions:
