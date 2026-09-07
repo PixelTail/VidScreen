@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen",
+  "version": "${version}",
+  "name": "VidScreen",
+  "description": "Bounded, client-fetched synchronized video screens for Minecraft 1.20.1.",
+  "authors": ["VidScreen contributors"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.vidscreen.fabric.VidScreenFabric"],
+    "client": ["dev.vidscreen.fabric.client.VidScreenFabricClient"]
+  },
+  "depends": {
+    "fabricloader": "0.19.5",
+    "fabric-api": "0.92.12+1.20.1",
+    "minecraft": "1.20.1",
+    "java": ">=17"
+  }
+}

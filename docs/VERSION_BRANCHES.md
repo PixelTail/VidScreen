@@ -10,7 +10,7 @@ VidScreen keeps protocol and product behavior aligned while allowing incompatibl
 | `version/26.2` | 26.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
 | `version/26.1.2` | 26.1.2 | 25 | Paper/Purpur, Fabric, NeoForge | experimental |
 | `version/1.21.11` | 1.21.11 | 21 | Paper/Purpur, Fabric, NeoForge | planned |
-| `version/1.20.1` | 1.20.1 | 17 | Paper/Purpur, Fabric, Forge | planned |
+| `version/1.20.1` | 1.20.1 | 17 | Paper/Purpur, Fabric, Forge | experimental |
 | `version/1.19.2` | 1.19.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.18.2` | 1.18.2 | 17 | Paper/Purpur, Fabric, Forge | planned |
 | `version/1.16.5` | 1.16.5 | 8 runtime target | Paper-family, Fabric, Forge | feasibility |
@@ -39,4 +39,4 @@ A planned branch is not created or published as a compatibility claim. It is cre
 
 ## Current repository
 
-The GitHub repository is `https://github.com/PixelTail/VidScreen`. `main`, `version/26.2`, and `version/26.1.2` were initialized from the first tested source baseline. Older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.
+The GitHub repository is `https://github.com/PixelTail/VidScreen`. `main`, `version/26.2`, `version/26.1.2`, and the independent `version/1.20.1` lane are initialized from the tested source baseline. Older branches are added incrementally because their Gradle, mappings, loader, rendering, networking, and Java constraints are not interchangeable with 26.x.

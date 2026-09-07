@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[47,48)"
+license="MIT"
+
+[[mods]]
+modId="vidscreen"
+version="${version}"
+displayName="VidScreen"
+authors="VidScreen contributors"
+description='Bounded client-fetched synchronized video screens for Minecraft 1.20.1.'
+
+[[dependencies.vidscreen]]
+modId="forge"
+mandatory=true
+versionRange="[47.4.23,48)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.vidscreen]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"

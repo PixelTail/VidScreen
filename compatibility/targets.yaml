@@ -193,7 +193,58 @@ targets:
   - minecraft: "1.20.1"
     java: 17
     primary: false
-    status: planned
+    status: experimental
+    independent_build: "compatibility/mc1.20.1"
+    pins:
+      gradle: "8.8"
+      fabric_loom: "1.6.12"
+      fabric_loader: "0.19.5"
+      fabric_api: "0.92.12+1.20.1"
+      fabric_mappings: "1.20.1+build.10:v2"
+      forge_gradle: "6.0.54"
+      forge: "1.20.1-47.4.23"
+      paper_api: "1.20.1-R0.1-SNAPSHOT"
+    platforms:
+      - surface: server-plugin
+        implementation: paper
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "Independent Java 17 Gradle build passed on 2026-09-07; dependency lockfile generated."
+          - "Runtime gates remain open."
+      - surface: client-mod
+        implementation: fabric
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "1.20.1 Identifier/PacketByteBuf networking, WorldRenderEvents.AFTER_ENTITIES, and NativeImageBackedTexture compile."
+      - surface: server-mod
+        implementation: fabric
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+      - surface: client-mod
+        implementation: forge
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+        notes:
+          - "1.20.1 SimpleChannel, RenderLevelStageEvent.AFTER_ENTITIES, and DynamicTexture/NativeImage compile."
+      - surface: server-mod
+        implementation: forge
+        status: experimental
+        build_verified: true
+        runtime_verified: false
+    verification:
+      command: "compatibility/mc1.20.1/gradlew --no-daemon --stacktrace :shared-core:test :paper:build :fabric:build :forge:build"
+      last_passed: "2026-09-07"
+      remaining_gates:
+        - "Dedicated Paper, Fabric, and Forge server startup/classloading"
+        - "Fabric and Forge client startup, render screenshot, and DynamicTexture cleanup"
+        - "Direct HTTPS MP4/HLS playback with an available client media runtime"
+        - "Reconnect, dimension, chunk lifecycle, two-client synchronization, and OS packaging"
   - minecraft: "1.19.2"
     java: 17
     primary: false

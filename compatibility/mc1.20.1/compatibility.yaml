@@ -1,0 +1,64 @@
+schema: 1
+lane: "1.20.1"
+java: 17
+gradle: "8.8"
+status: experimental
+protocol:
+  major: 1
+  minor: 0
+  media_relay: false
+pins:
+  fabric_loom: "1.6.12"
+  fabric_loader: "0.19.5"
+  fabric_api: "0.92.12+1.20.1"
+  fabric_mappings: "1.20.1+build.10:v2"
+  forge_gradle: "6.0.54"
+  forge: "1.20.1-47.4.23"
+  paper_api: "1.20.1-R0.1-SNAPSHOT"
+platforms:
+  paper:
+    surface: server-plugin
+    status: experimental
+    build_verified: true
+    runtime_verified: false
+    notes:
+      - "Paper API artifact is present in the official Paper repository."
+      - "The standalone Java 17 build and dependency lock resolution passed on 2026-09-07."
+      - "Uses bounded plugin messages and the shared Java 8 server core."
+  fabric:
+    server:
+      status: experimental
+      build_verified: true
+      runtime_verified: false
+    client:
+      status: experimental
+      build_verified: true
+      runtime_verified: false
+      notes:
+        - "Uses Fabric 1.20.1 Identifier/PacketByteBuf networking and WorldRenderEvents.AFTER_ENTITIES."
+        - "Dynamic textures use NativeImageBackedTexture; media remains client-side."
+  forge:
+    server:
+      status: experimental
+      build_verified: true
+      runtime_verified: false
+    client:
+      status: experimental
+      build_verified: true
+      runtime_verified: false
+      notes:
+        - "Uses Forge SimpleChannel and RenderLevelStageEvent.AFTER_ENTITIES."
+        - "Dynamic textures use DynamicTexture/NativeImage; dedicated server code has no client imports."
+gates:
+  build_java17_and_dependency_locks: passed_2026-09-07
+  shared_unit_tests: passed
+  malformed_bounded_payloads: pending_platform_adapter_tests
+  fake_clock_sync: pending
+  geometry: passed
+  dedicated_server_classloading: pending
+  loader_or_plugin_integration: pending
+  reconnect_dimension_chunk_lifecycle: pending
+  client_render_smoke: pending
+  native_cleanup: blocked_no_1_20_1_native_companion
+  two_client_sync: pending
+  packaging: pending

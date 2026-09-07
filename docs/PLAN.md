@@ -186,7 +186,7 @@ Thresholds are selected from measurements, not hard-coded from the planning docu
 | A | 26.2 | 25 | Paper/Purpur; Folia validation | Fabric, NeoForge | Fabric, NeoForge | primary |
 | B | 26.1.2 | 25 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | experimental compile/package lane |
 | C | 1.21.x | 21 | Paper/Purpur | Fabric, NeoForge | Fabric, NeoForge | planned |
-| D | 1.20.1 | 17 | Paper/Purpur | Fabric, Forge | Fabric, Forge | planned |
+| D | 1.20.1 | 17 | Paper/Purpur | Fabric, Forge | Fabric, Forge | experimental compile/package lane |
 | E | 1.19.2, 1.18.2 | 17 | Paper-family feasibility | Fabric, Forge | Fabric, Forge | feasibility |
 | F | 1.16.5 | 8 | Paper/Spigot feasibility | Fabric, Forge | Fabric, Forge | stretch |
 | G | 1.12.2 | 8 | Spigot/Paper legacy feasibility | Forge | Forge | stretch |
@@ -414,7 +414,7 @@ Exit criteria:
 
 ### Phase 9 — Downward ports
 
-Minecraft 26.1.2 is now present as the first exact downward compile/package lane; see ADR 0006. It remains experimental until its runtime gates pass. Continue with 1.21.x only after the 26.2 runtime vertical slice remains the reference behavior and the 26.1.2 runtime delta is measured.
+Minecraft 26.1.2 is now present as the first exact downward compile/package lane; see ADR 0006. The independent Java 17 Minecraft 1.20.1 branch now has a locked, passing `:shared-core:test :paper:build :fabric:build :forge:build` invocation with exact Fabric, Forge, Paper, Loom, ForgeGradle, and Gradle pins; see `compatibility/mc1.20.1/FEASIBILITY.md`. Both lanes remain experimental until their runtime gates pass. Continue with 1.21.x only after the 26.2 runtime vertical slice remains the reference behavior and the downward runtime deltas are measured.
 
 Port subsequent waves C through G. Each lane gets its own feasibility note, build pins, adapter changes, CI matrix, and promotion gate. Prioritize versions with active server populations and maintainable native media support rather than maximizing a number on the project page.
 

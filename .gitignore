@@ -12,6 +12,9 @@
 run/
 runs/
 server/
+!shared/server-core/
+!shared/server-core/src/
+!shared/server-core/src/**
 test-server/
 logs/
 crash-reports/

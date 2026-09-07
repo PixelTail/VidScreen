@@ -1,0 +1,18 @@
+name: VidScreen
+version: ${version}
+main: dev.vidscreen.paper.VidScreenPaperPlugin
+api-version: '1.20'
+description: Synchronized in-world video screens for modded clients.
+authors: [VidScreen Contributors]
+commands:
+  vidscreen:
+    description: Manage VidScreen screens.
+    usage: /vidscreen <wand|pos1|pos2|create|list|delete|source|play|pause|stop|seek|loop|sync>
+    permission: vidscreen.use
+permissions:
+  vidscreen.use:
+    description: Use VidScreen read-only commands.
+    default: op
+  vidscreen.admin:
+    description: Create, edit, and delete VidScreen screens.
+    default: op
