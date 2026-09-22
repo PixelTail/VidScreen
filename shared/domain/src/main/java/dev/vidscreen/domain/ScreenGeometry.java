@@ -36,6 +36,78 @@ public final class ScreenGeometry {
         return geometry;
     }
 
+    /**
+     * Builds an axis-aligned screen around a selected block centre.
+     *
+     * <p>Odd dimensions are symmetric around the selected block.  For an even
+     * dimension the extra block is placed on the positive in-plane axis.  The
+     * vertical offset is always applied to the world Y coordinate, including
+     * for the horizontal UP/DOWN planes.</p>
+     */
+    public static ScreenGeometry centered(
+            BlockPoint center,
+            Facing facing,
+            int widthBlocks,
+            int heightBlocks,
+            int verticalOffset) {
+        Objects.requireNonNull(center, "center");
+        Objects.requireNonNull(facing, "facing");
+        if (widthBlocks < 1 || heightBlocks < 1) {
+            throw new IllegalArgumentException("Screen dimensions must be positive");
+        }
+
+        long shiftedY = (long) center.y() + verticalOffset;
+        int minY;
+        int maxY;
+
+        int minX = center.x();
+        int maxX = center.x();
+        int minZ = center.z();
+        int maxZ = center.z();
+        long minWidth = (long) (widthBlocks - 1) / 2L;
+        long maxWidth = (long) (widthBlocks - 1) - minWidth;
+        long minHeight = (long) (heightBlocks - 1) / 2L;
+        long maxHeight = (long) (heightBlocks - 1) - minHeight;
+
+        switch (facing.axis()) {
+            case X:
+                minY = toInt(shiftedY - minHeight, "Screen Y coordinate");
+                maxY = toInt(shiftedY + maxHeight, "Screen Y coordinate");
+                minZ = toInt((long) center.z() - minWidth, "Screen Z coordinate");
+                maxZ = toInt((long) center.z() + maxWidth, "Screen Z coordinate");
+                break;
+            case Z:
+                minY = toInt(shiftedY - minHeight, "Screen Y coordinate");
+                maxY = toInt(shiftedY + maxHeight, "Screen Y coordinate");
+                minX = toInt((long) center.x() - minWidth, "Screen X coordinate");
+                maxX = toInt((long) center.x() + maxWidth, "Screen X coordinate");
+                break;
+            case Y:
+                minY = maxY = toInt(shiftedY, "Screen Y coordinate");
+                minX = toInt((long) center.x() - minWidth, "Screen X coordinate");
+                maxX = toInt((long) center.x() + maxWidth, "Screen X coordinate");
+                minZ = toInt((long) center.z() - minHeight, "Screen Z coordinate");
+                maxZ = toInt((long) center.z() + maxHeight, "Screen Z coordinate");
+                break;
+            default:
+                throw new AssertionError(facing.axis());
+        }
+
+        ScreenGeometry geometry = new ScreenGeometry(
+                new BlockPoint(minX, minY, minZ),
+                new BlockPoint(maxX, maxY, maxZ),
+                facing);
+        geometry.validateSize();
+        return geometry;
+    }
+
+    private static int toInt(long value, String coordinate) {
+        if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(coordinate + " is outside the block coordinate range");
+        }
+        return (int) value;
+    }
+
     private void validateSize() {
         if (widthBlocks() > VidScreenLimits.MAX_SCREEN_WIDTH_BLOCKS) {
             throw new IllegalArgumentException("Screen width exceeds " + VidScreenLimits.MAX_SCREEN_WIDTH_BLOCKS + " blocks");

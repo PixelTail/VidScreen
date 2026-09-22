@@ -3,7 +3,7 @@
 Status: active implementation; 26.2 compile/unit-test baseline is green, runtime support is not yet claimed  
 Primary target: Minecraft 26.2  
 Porting direction: newest to oldest  
-Last updated: 2026-09-07
+Last updated: 2026-09-22
 
 ## 1. Product goal
 
@@ -12,7 +12,7 @@ Build an in-world synchronized video-screen system with a shared protocol and mu
 - Paper/Purpur server plugin, with Folia compatibility designed in rather than retrofitted;
 - Fabric and NeoForge server mods;
 - required Fabric and NeoForge client mods;
-- two-corner, axis-aligned screen creation and preview;
+- client menu, viewing-area selection, four-corner screen previews, and curved-screen settings;
 - direct client-side media retrieval, decoding, texture rendering, and spatial audio;
 - authoritative server-side screen definitions, permissions, playback state, persistence, and synchronization;
 - a version strategy that proves 26.2 first and then ports downward without falsely claiming untested combinations.
@@ -495,5 +495,13 @@ The following choices must be recorded in ADRs, but they do not block repository
 6. whether Bilibili is required for the first provider-resolver milestone.
 
 ## 12. Immediate next action
+
+The 2026-09-22 user request replaces the command/wand-first creation flow with the [MusesPlayer tutorial](https://www.bilibili.com/video/BV1Jpja6vEUm/) workflow, including viewing areas and curved screens. Both current lanes now share tested geometry, selection, handshake/state, typed editor operations and playback lifecycle logic, while exact loader/render APIs stay in their own adapters. Client-only UI source is shared between the two loaders within each Minecraft lane, compiled separately against both exact APIs.
+
+The confirmed prior Paper invisibility defect was an envelope mismatch: mod custom payloads contained a VarInt length, while Paper sent/read bare VIDS bytes. All transports now use the same bounded envelope. NeoForge's channel is optional for Paper interoperability. New `SCREEN_EDITOR`-negotiated scene messages carry areas and curved-screen metadata; existing v1 screen messages remain byte-compatible. Persistence reads both legacy snapshots and complete scene snapshots. Native playback errors, end-of-stream, loop targets and revision-triggered retry are handled by the shared coordinator.
+
+Acceptance for this refactor requires the complete build, permission/persistence/scene/selection/mesh/lifecycle tests, the opt-in Windows HTTPS MP4 decoder test, and the bounded local Paper/Fabric application smoke test. Preserve the distinction between these results and release support; the existing Linux, audio, HLS/provider, secure-media connection boundary and multi-client/soak gates remain open.
+
+Validated on 2026-09-22: the complete two-lane build passed; the normal test reports contain 98 tests, zero failures/errors, and one intentionally skipped network integration test. That opt-in Windows native MP4 test was also explicitly run and passed. The final 26.2 Fabric/Paper application run emitted `VIDSCREEN_SMOKE_PASS`, verified a decoded GPU texture and captured flat/curved screens, player/settings menus and viewing-area/corner overlays. Its final deletion run no longer emitted missing-texture warnings. Temporary scene objects and OP were removed, and both test processes exited. Source inspection and compilation do not promote NeoForge, 26.1.2 or other platforms to runtime support.
 
 Run each 26.2 client with its companion runtime installed. Exercise a controlled direct HTTPS MP4 fixture first: frame/UV verification, pause, seek, rate correction, reconnect, and repeated cleanup. Replay the same validated fixture and lifecycle sequence on the new 26.1.2 Fabric/NeoForge clients before expanding to 1.21.x. Next add the VidScreen-owned connection boundary, HLS fixture coverage, spatial audio, Linux CI runtime loading, per-platform minimized packages, and a two-client Paper synchronization measurement. Do not mark any combination supported until those gates and the exact native-license audit pass.

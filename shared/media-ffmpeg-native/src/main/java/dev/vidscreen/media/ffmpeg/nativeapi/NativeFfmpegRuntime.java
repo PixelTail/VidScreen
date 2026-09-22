@@ -5,6 +5,8 @@ import org.bytedeco.javacpp.Loader;
 import static org.bytedeco.ffmpeg.global.avcodec.avcodec_version;
 import static org.bytedeco.ffmpeg.global.avformat.avformat_version;
 import static org.bytedeco.ffmpeg.global.avutil.avutil_version;
+import static org.bytedeco.ffmpeg.global.avutil.av_log_set_level;
+import static org.bytedeco.ffmpeg.global.avutil.AV_LOG_QUIET;
 import static org.bytedeco.ffmpeg.global.swresample.swresample_version;
 import static org.bytedeco.ffmpeg.global.swscale.swscale_version;
 
@@ -41,6 +43,9 @@ public final class NativeFfmpegRuntime {
 
     private static void load() {
         avutil_version();
+        // FFmpeg's default native diagnostics include complete URLs (including
+        // signed query parameters). Report sanitized player failures instead.
+        av_log_set_level(AV_LOG_QUIET);
         avcodec_version();
         avformat_version();
         swscale_version();

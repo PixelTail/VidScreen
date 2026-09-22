@@ -22,10 +22,15 @@ import dev.vidscreen.domain.ScreenFit;
 import dev.vidscreen.domain.ScreenGeometry;
 import dev.vidscreen.domain.ScreenState;
 import dev.vidscreen.domain.VidScreenLimits;
+import dev.vidscreen.domain.ViewingArea;
+import dev.vidscreen.domain.ScreenStyle;
 import dev.vidscreen.protocol.message.ClientHello;
 import dev.vidscreen.protocol.message.ClockRequest;
 import dev.vidscreen.protocol.message.ClockResponse;
 import dev.vidscreen.protocol.message.OperationResult;
+import dev.vidscreen.protocol.message.EditorRequest;
+import dev.vidscreen.protocol.message.SceneSnapshot;
+import dev.vidscreen.protocol.message.SceneUpsert;
 import dev.vidscreen.protocol.message.PlaybackUpdate;
 import dev.vidscreen.protocol.message.ScreenDelete;
 import dev.vidscreen.protocol.message.ScreenSnapshot;
@@ -121,6 +126,30 @@ public final class WireCodec {
             case OPERATION_RESULT:
                 writeOperationResult(output, (OperationResult) message);
                 return;
+            case EDITOR_REQUEST:
+                EditorRequest request = (EditorRequest) message;
+                writeUuid(output, request.operationId());
+                output.writeByte(request.action().ordinal());
+                writeUuid(output, request.screenId());
+                output.writeBoolean(request.definition() != null);
+                if (request.definition() != null) { writeExtendedDefinition(output, request.definition()); }
+                output.writeBoolean(request.media() != null);
+                if (request.media() != null) { writeMediaDescriptor(output, request.media()); }
+                output.writeDouble(request.value());
+                output.writeBoolean(request.area() != null);
+                if (request.area() != null) { writeArea(output, request.area()); }
+                return;
+            case SCENE_SNAPSHOT:
+                SceneSnapshot scene = (SceneSnapshot) message;
+                output.writeLong(scene.revision());
+                output.writeInt(scene.areas().size());
+                for (ViewingArea area : scene.areas()) { writeArea(output, area); }
+                output.writeInt(scene.screens().size());
+                for (ScreenState screen : scene.screens()) { writeExtendedState(output, screen); }
+                return;
+            case SCENE_UPSERT:
+                writeExtendedState(output, ((SceneUpsert) message).screen());
+                return;
             default:
                 throw new ProtocolException("Unsupported message type: " + message.type());
         }
@@ -150,6 +179,22 @@ public final class WireCodec {
                         input.readBoolean(),
                         readString(input, 64),
                         readString(input, VidScreenLimits.MAX_OPERATION_MESSAGE_BYTES));
+            case EDITOR_REQUEST:
+                return new EditorRequest(readUuid(input), readEnum(input, EditorRequest.Action.values(), "editor action"),
+                        readUuid(input), input.readBoolean() ? readExtendedDefinition(input) : null,
+                        input.readBoolean() ? readMediaDescriptor(input) : null, input.readDouble(),
+                        input.readBoolean() ? readArea(input) : null);
+            case SCENE_SNAPSHOT:
+                long revision = readNonNegativeLong(input, "scene revision");
+                int areaCount = readBoundedCount(input, ViewingArea.MAX_AREAS, "viewing area count");
+                List<ViewingArea> areas = new ArrayList<ViewingArea>(areaCount);
+                for (int i = 0; i < areaCount; i++) { areas.add(readArea(input)); }
+                int screenCount = readBoundedCount(input, VidScreenLimits.MAX_SCREENS_PER_SNAPSHOT, "screen count");
+                List<ScreenState> screens = new ArrayList<ScreenState>(screenCount);
+                for (int i = 0; i < screenCount; i++) { screens.add(readExtendedState(input)); }
+                return new SceneSnapshot(revision, screens, areas);
+            case SCENE_UPSERT:
+                return new SceneUpsert(readExtendedState(input));
             default:
                 throw new ProtocolException("Unsupported message type: " + type);
         }
@@ -163,6 +208,49 @@ public final class WireCodec {
         writeString(output, hello.minecraftVersion(), 64);
         output.writeLong(hello.capabilities());
         output.writeInt(hello.maxTextureSize());
+    }
+
+    private void writeArea(DataOutputStream output, ViewingArea area) throws IOException, ProtocolException {
+        writeUuid(output, area.id());
+        writeString(output, area.name(), VidScreenLimits.MAX_SCREEN_NAME_BYTES);
+        writeString(output, area.dimension().value(), VidScreenLimits.MAX_DIMENSION_KEY_BYTES);
+        writeBlockPoint(output, area.min()); writeBlockPoint(output, area.max());
+    }
+
+    private ViewingArea readArea(DataInputStream input) throws IOException, ProtocolException {
+        return new ViewingArea(readUuid(input), readString(input, VidScreenLimits.MAX_SCREEN_NAME_BYTES),
+                new DimensionKey(readString(input, VidScreenLimits.MAX_DIMENSION_KEY_BYTES)),
+                readBlockPoint(input), readBlockPoint(input));
+    }
+
+    private void writeExtendedDefinition(DataOutputStream output, ScreenDefinition definition) throws IOException, ProtocolException {
+        writeScreenDefinition(output, definition);
+        ScreenStyle style = definition.style();
+        output.writeDouble(style.curvatureDegrees()); output.writeInt(style.segments());
+        output.writeDouble(style.offsetX()); output.writeDouble(style.offsetY()); output.writeDouble(style.offsetZ());
+        output.writeBoolean(definition.viewingAreaId() != null);
+        if (definition.viewingAreaId() != null) { writeUuid(output, definition.viewingAreaId()); }
+    }
+
+    private ScreenDefinition readExtendedDefinition(DataInputStream input) throws IOException, ProtocolException {
+        ScreenDefinition base = readScreenDefinition(input);
+        ScreenStyle style = new ScreenStyle(input.readDouble(), input.readInt(), input.readDouble(), input.readDouble(), input.readDouble());
+        UUID area = input.readBoolean() ? readUuid(input) : null;
+        return new ScreenDefinition(base.id(), base.name(), base.dimension(), base.geometry(), base.fit(), base.viewDistance(), style, area);
+    }
+
+    private void writeExtendedState(DataOutputStream output, ScreenState screen) throws IOException, ProtocolException {
+        output.writeLong(screen.revision()); writeExtendedDefinition(output, screen.definition());
+        output.writeBoolean(screen.media() != null);
+        if (screen.media() != null) { writeMediaDescriptor(output, screen.media()); }
+        writePlaybackState(output, screen.playback());
+    }
+
+    private ScreenState readExtendedState(DataInputStream input) throws IOException, ProtocolException {
+        long revision = readNonNegativeLong(input, "screen revision");
+        ScreenDefinition definition = readExtendedDefinition(input);
+        MediaDescriptor media = input.readBoolean() ? readMediaDescriptor(input) : null;
+        return new ScreenState(revision, definition, media, readPlaybackState(input));
     }
 
     private ClientHello readClientHello(DataInputStream input) throws IOException, ProtocolException {

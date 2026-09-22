@@ -4,9 +4,23 @@ import java.net.URI;
 import java.util.Locale;
 
 import dev.vidscreen.domain.MediaDescriptor;
+import dev.vidscreen.domain.PlaybackState;
+import dev.vidscreen.domain.PlaybackStatus;
+import dev.vidscreen.domain.ScreenState;
 
 public final class CapabilityRequirements {
     private CapabilityRequirements() {
+    }
+
+    /** Keep the physical screen visible without disclosing an unsupported media source. */
+    public static ScreenState visibleState(long capabilities, ScreenState screen) {
+        if (supportsMedia(capabilities, screen.media())) {
+            return screen;
+        }
+        PlaybackState state = screen.playback();
+        return new ScreenState(screen.revision(), screen.definition(), null,
+                new PlaybackState(state.revision(), PlaybackStatus.FAILED, 0,
+                        state.effectiveServerTimeMillis(), 1.0, false));
     }
 
     public static boolean supportsMedia(long capabilities, MediaDescriptor media) {

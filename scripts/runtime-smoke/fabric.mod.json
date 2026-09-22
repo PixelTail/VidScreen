@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "vidscreen_smoke",
+  "version": "1",
+  "name": "VidScreen local runtime smoke test",
+  "environment": "client",
+  "entrypoints": {"client": ["dev.vidscreen.smoke.RuntimeSmoke"]},
+  "depends": {"vidscreen": "*", "fabric-api": "*"}
+}

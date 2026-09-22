@@ -7,7 +7,7 @@ authors: [VidScreen Contributors]
 commands:
   vidscreen:
     description: Manage VidScreen screens.
-    usage: /vidscreen <wand|pos1|pos2|create|list|delete|source|play|pause|stop|seek|loop|sync>
+    usage: /vidscreen <wand|pos1|pos2|create|list|delete|source|play|pause|stop|seek|loop|sync|status>
     permission: vidscreen.use
 permissions:
   vidscreen.use:

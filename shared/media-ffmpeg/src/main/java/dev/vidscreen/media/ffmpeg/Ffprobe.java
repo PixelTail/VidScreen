@@ -32,7 +32,7 @@ final class Ffprobe {
         command.add("-select_streams");
         command.add("v:0");
         command.add("-show_entries");
-        command.add("stream=width,height,avg_frame_rate");
+        command.add("stream=width,height,avg_frame_rate:format=duration");
         command.add("-of");
         command.add("default=noprint_wrappers=1:nokey=1");
         command.add(source);
@@ -77,10 +77,26 @@ final class Ffprobe {
             int width = Integer.parseInt(lines[0].trim());
             int height = Integer.parseInt(lines[1].trim());
             double frameRate = parseRate(lines[2].trim());
-            return new ProbeResult(width, height, frameRate);
+            long durationMillis = lines.length < 4 ? -1L : parseDurationMillis(lines[3].trim());
+            return new ProbeResult(width, height, frameRate, durationMillis);
         } catch (RuntimeException error) {
             throw new IOException("ffprobe returned invalid video metadata", error);
         }
+    }
+
+    private static long parseDurationMillis(String value) {
+        if (value.isEmpty() || "N/A".equalsIgnoreCase(value)) {
+            return -1L;
+        }
+        double seconds = Double.parseDouble(value);
+        if (!Double.isFinite(seconds) || seconds <= 0) {
+            return -1L;
+        }
+        double millis = seconds * 1_000.0;
+        if (millis >= Long.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        return Math.max(1L, Math.round(millis));
     }
 
     private static double parseRate(String value) {
@@ -116,14 +132,19 @@ final class Ffprobe {
         private final int width;
         private final int height;
         private final double frameRate;
+        private final long durationMillis;
 
-        ProbeResult(int width, int height, double frameRate) {
+        ProbeResult(int width, int height, double frameRate, long durationMillis) {
             if (width < 1 || height < 1 || width > 65_536 || height > 65_536) {
                 throw new IllegalArgumentException("Invalid source dimensions");
+            }
+            if (durationMillis == 0 || durationMillis < -1) {
+                throw new IllegalArgumentException("Invalid media duration");
             }
             this.width = width;
             this.height = height;
             this.frameRate = frameRate;
+            this.durationMillis = durationMillis;
         }
 
         int width() {
@@ -136,6 +157,10 @@ final class Ffprobe {
 
         double frameRate() {
             return frameRate;
+        }
+
+        long durationMillis() {
+            return durationMillis;
         }
     }
 }

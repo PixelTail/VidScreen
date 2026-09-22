@@ -8,6 +8,7 @@ public final class Capabilities {
     public static final long TWITCH = 1L << 4;
     public static final long LIVE_STREAMS = 1L << 5;
     public static final long SPATIAL_AUDIO = 1L << 6;
+    public static final long SCREEN_EDITOR = 1L << 7;
 
     private Capabilities() {
     }

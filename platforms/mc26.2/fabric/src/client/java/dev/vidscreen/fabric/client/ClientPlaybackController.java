@@ -1,5 +1,7 @@
 package dev.vidscreen.fabric.client;
 
+import dev.vidscreen.client.ClientScreenStore;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,7 +79,21 @@ final class ClientPlaybackController implements AutoCloseable {
         playback = new ScreenPlaybackCoordinator(
                 resolvers,
                 playerFactory,
-                failure -> logFailure(logger, failure),
+                failure -> {
+                    logFailure(logger, failure);
+                    Minecraft.getInstance().execute(() -> {
+                        Minecraft client = Minecraft.getInstance();
+                        if (client.player == null) { return; }
+                        for (ScreenState screen : store.snapshot()) {
+                            if (screen.definition().id().equals(failure.screenId())) {
+                                dev.vidscreen.gui.EditorClient.message(net.minecraft.network.chat.Component.literal(
+                                        "VidScreen: " + screen.definition().name()
+                                        + " 播放失败（" + failure.stage() + "）。请检查视频链接或媒体运行库，再点击继续重试。"), false);
+                                break;
+                            }
+                        }
+                    });
+                },
                 VIDEO_WIDTH,
                 VIDEO_HEIGHT);
         capabilities = availableCapabilities;
@@ -91,6 +107,12 @@ final class ClientPlaybackController implements AutoCloseable {
         } else {
             logger.info("VidScreen provider resolution is disabled; direct MP4/HLS playback remains available");
         }
+    }
+
+    String availability() {
+        return playback == null
+                ? "无法播放视频：请安装匹配的 VidScreen 媒体运行库。"
+                : "视频已就绪。按 N 打开观影菜单，按 U 调整屏幕。";
     }
 
     long capabilities() {
@@ -111,7 +133,7 @@ final class ClientPlaybackController implements AutoCloseable {
             return;
         }
         List<ScreenState> screens = new ArrayList<>(selector.select(
-                store.snapshot(),
+                store.playbackSnapshot(client.level.dimension().identifier().toString(), client.player.getX(), client.player.getY(), client.player.getZ()),
                 client.level.dimension().identifier().toString(),
                 client.player.getX(),
                 client.player.getY(),
@@ -130,7 +152,7 @@ final class ClientPlaybackController implements AutoCloseable {
 
     private static boolean isAnchorChunkLoaded(Minecraft client, ScreenState screen) {
         return client.level != null
-                && client.level.hasChunk(
+                && client.level.getChunkSource().hasChunk(
                         VisibleScreenSelector.anchorChunkX(screen),
                         VisibleScreenSelector.anchorChunkZ(screen));
     }

@@ -1,0 +1,41 @@
+// Opt-in development harness. It is never included in distributed mods.
+gradle.projectsEvaluated {
+    def clientProject = rootProject.project(':platforms:mc26.2:fabric')
+    def smokeRoot = rootProject.file('.tools/runtime-smoke')
+    clientProject.tasks.register('compileSmoke', JavaCompile) {
+        dependsOn(clientProject.tasks.named('compileClientJava'))
+        source(rootProject.file('scripts/runtime-smoke'))
+        classpath = clientProject.sourceSets.client.compileClasspath + clientProject.sourceSets.client.output + clientProject.sourceSets.main.output
+        destinationDirectory = new File(smokeRoot, 'classes')
+        javaCompiler = clientProject.tasks.named('compileClientJava').get().javaCompiler
+        options.encoding = 'UTF-8'
+    }
+    clientProject.tasks.register('smokeJar', Jar) {
+        dependsOn('compileSmoke')
+        from(new File(smokeRoot, 'classes'))
+        from(rootProject.file('scripts/runtime-smoke/fabric.mod.json'))
+        destinationDirectory = new File(smokeRoot, 'client/mods')
+        archiveFileName = 'vidscreen-smoke.jar'
+    }
+    clientProject.tasks.named('runClient', JavaExec) {
+        dependsOn('smokeJar', ':platforms:mc26.2:media-runtime-fabric:jar')
+        workingDir = new File(smokeRoot, 'client')
+        args('--username', 'VidScreenSmoke', '--width', '1280', '--height', '720',
+                '--gameDir', new File(smokeRoot, 'client').absolutePath,
+                '--quickPlayMultiplayer', '127.0.0.1:25565')
+        jvmArgs('-Xmx2G')
+        doFirst {
+            def optionsFile = new File(smokeRoot, 'client/options.txt')
+            optionsFile.parentFile.mkdirs()
+            def options = optionsFile.exists() ? optionsFile.text : ''
+            ['onboardAccessibility':'false', 'pauseOnLostFocus':'false', 'tutorialStep':'none'].each { key, value ->
+                options = options.replaceAll('(?m)^' + key + ':.*\\r?\\n?', '') + key + ':' + value + '\n'
+            }
+            optionsFile.text = options
+            copy {
+                from(rootProject.project(':platforms:mc26.2:media-runtime-fabric').tasks.named('jar').get().archiveFile)
+                into(new File(smokeRoot, 'client/mods'))
+            }
+        }
+    }
+}

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import dev.vidscreen.domain.DriftAction;
@@ -20,6 +22,7 @@ import dev.vidscreen.domain.PlaybackStatus;
 import dev.vidscreen.domain.ScreenState;
 import dev.vidscreen.media.LatestFrameQueue;
 import dev.vidscreen.media.MediaPlayer;
+import dev.vidscreen.media.MediaPlayerState;
 import dev.vidscreen.media.MediaRequest;
 import dev.vidscreen.media.MediaResolver;
 import dev.vidscreen.media.ResolvedMedia;
@@ -71,16 +74,28 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
                 continue;
             }
             active.add(id);
+
+            PlaybackState desired = screen.playback();
             Session session = sessions.get(id);
-            if (session == null || !session.media().equals(screen.media())) {
+            boolean sourceChanged = session == null || !session.media().equals(screen.media());
+            boolean authoritativeRetry = session != null
+                    && session.failed
+                    && desired.revision() > session.failedRevision;
+            if (sourceChanged || authoritativeRetry) {
                 remove(id);
-                session = create(screen);
+                session = create(screen, estimatedServerTimeMillis);
                 sessions.put(id, session);
-                resolve(session, screen);
+                if (!session.failed) {
+                    resolve(session, screen);
+                }
             }
-            session.desiredState = screen.playback();
+
+            session.desiredState = desired;
             session.estimatedServerTimeMillis = estimatedServerTimeMillis;
-            applyIfReady(session);
+            if (!session.failed) {
+                observeTerminal(session);
+                applyIfReady(session);
+            }
         }
 
         UUID[] ids = sessions.keySet().toArray(new UUID[0]);
@@ -93,12 +108,32 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
 
     public synchronized LatestFrameQueue frameQueue(UUID screenId) {
         Session session = sessions.get(screenId);
-        return session == null ? null : session.frames();
+        return session == null || session.failed ? null : session.frames();
     }
 
-    private Session create(ScreenState screen) {
-        MediaPlayer player = playerFactory.create(width, height);
-        return new Session(screen.definition().id(), screen.media(), player, new LatestFrameQueue());
+    private Session create(ScreenState screen, long estimatedServerTimeMillis) {
+        LatestFrameQueue frames = new LatestFrameQueue();
+        MediaPlayer player;
+        try {
+            player = playerFactory.create(width, height);
+            if (player == null) {
+                throw new NullPointerException("Media player factory returned null");
+            }
+        } catch (RuntimeException | LinkageError error) {
+            Session failed = new Session(screen.definition().id(), screen.media(), null, frames);
+            failed.desiredState = screen.playback();
+            failed.estimatedServerTimeMillis = estimatedServerTimeMillis;
+            failed.failed = true;
+            failed.failedRevision = screen.playback().revision();
+            frames.close();
+            notifyFailure(new PlaybackFailure(failed.id(), "create", error));
+            return failed;
+        }
+
+        Session session = new Session(screen.definition().id(), screen.media(), player, frames);
+        session.desiredState = screen.playback();
+        session.estimatedServerTimeMillis = estimatedServerTimeMillis;
+        return session;
     }
 
     private void resolve(Session session, ScreenState screen) {
@@ -116,7 +151,18 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         }
 
         try {
-            resolver.resolve(new MediaRequest(source, width, height)).whenComplete((resolved, resolveError) -> {
+            CompletionStage<ResolvedMedia> resolution = resolver.resolve(new MediaRequest(source, width, height));
+            if (resolution == null) {
+                throw new IllegalStateException("Media resolver returned no completion stage");
+            }
+            session.resolution = resolution;
+            resolution.whenComplete((resolved, resolveError) -> {
+                synchronized (ScreenPlaybackCoordinator.this) {
+                    if (!isCurrent(session)) {
+                        return;
+                    }
+                    session.resolution = null;
+                }
                 if (resolveError != null) {
                     fail(session, "resolve", unwrap(resolveError));
                     return;
@@ -133,11 +179,15 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
     }
 
     private synchronized void open(Session session, ResolvedMedia resolved) {
-        if (!isCurrent(session)) {
+        if (!isCurrent(session) || session.failed || session.player() == null) {
             return;
         }
         try {
-            session.player().open(resolved, session.frames()).whenComplete((ignored, openError) -> {
+            CompletionStage<Void> opening = session.player().open(resolved, session.frames());
+            if (opening == null) {
+                throw new IllegalStateException("Media player returned no open completion stage");
+            }
+            opening.whenComplete((ignored, openError) -> {
                 synchronized (ScreenPlaybackCoordinator.this) {
                     if (!isCurrent(session)) {
                         return;
@@ -147,6 +197,7 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
                         return;
                     }
                     session.ready = true;
+                    session.durationMillis = knownDurationMillis(session.player());
                     applyIfReady(session);
                 }
             });
@@ -155,14 +206,72 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         }
     }
 
+    private void observeTerminal(Session session) {
+        if (session.failed || session.player() == null) {
+            return;
+        }
+        try {
+            long durationMillis = knownDurationMillis(session.player());
+            if (durationMillis > 0) {
+                session.durationMillis = durationMillis;
+            }
+            MediaPlayerState state = session.player().state();
+            if (state == MediaPlayerState.FAILED) {
+                Throwable cause = session.player().failure();
+                failLocked(session, "decode", cause == null
+                        ? new IllegalStateException("Media decoder failed")
+                        : cause);
+            } else if (state == MediaPlayerState.ENDED) {
+                if (session.ended && session.endedRevision != session.desiredState.revision()) {
+                    session.ended = false;
+                    session.endedRevision = -1;
+                    return;
+                }
+                handleEndOfStream(session);
+            }
+        } catch (RuntimeException error) {
+            failLocked(session, "status", error);
+        }
+    }
+
+    private void handleEndOfStream(Session session) {
+        PlaybackState desired = session.desiredState;
+        if (desired == null) {
+            return;
+        }
+        if (desired.status() == PlaybackStatus.PLAYING && desired.looping() && session.durationMillis > 0) {
+            long target = desired.targetPositionMillis(session.estimatedServerTimeMillis);
+            long loopPosition = target % session.durationMillis;
+            try {
+                setRate(session, desired.playbackRate());
+                session.player().seek(Duration.ofMillis(loopPosition));
+                session.player().play();
+                session.ended = false;
+                session.endedRevision = -1;
+                session.appliedRevision = desired.revision();
+                session.lastDriftCheckMillis = session.estimatedServerTimeMillis;
+            } catch (RuntimeException error) {
+                failLocked(session, "loop", error);
+            }
+            return;
+        }
+        session.ended = true;
+        session.endedRevision = desired.revision();
+    }
+
     private void applyIfReady(Session session) {
-        if (!session.ready || session.failed || session.desiredState == null) {
+        if (!session.ready || session.failed || session.desiredState == null || session.player() == null) {
             return;
         }
         PlaybackState desired = session.desiredState;
+        if (session.ended && session.endedRevision == desired.revision()) {
+            return;
+        }
         try {
             if (session.appliedRevision != desired.revision()) {
-                long target = desired.targetPositionMillis(session.estimatedServerTimeMillis);
+                session.ended = false;
+                session.endedRevision = -1;
+                long target = targetPositionMillis(session, desired);
                 setRate(session, desired.playbackRate());
                 session.player().seek(Duration.ofMillis(target));
                 if (desired.status() == PlaybackStatus.PLAYING) {
@@ -182,6 +291,9 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
     }
 
     private void correctDrift(Session session, PlaybackState desired) {
+        if (session.ended && session.endedRevision == desired.revision()) {
+            return;
+        }
         if (desired.status() != PlaybackStatus.PLAYING) {
             return;
         }
@@ -191,7 +303,7 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
             return;
         }
         session.lastDriftCheckMillis = now;
-        long target = desired.targetPositionMillis(now);
+        long target = targetPositionMillis(session, desired);
         long current = session.player().position().toMillis();
         DriftCorrection correction = driftPolicy.correct(current, target, desired.playbackRate());
         if (correction.action() == DriftAction.SEEK) {
@@ -203,6 +315,16 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         } else {
             setRate(session, desired.playbackRate());
         }
+    }
+
+    private static long knownDurationMillis(MediaPlayer player) {
+        long durationMillis = player.durationMillis();
+        return durationMillis > 0 ? durationMillis : -1L;
+    }
+
+    private static long targetPositionMillis(Session session, PlaybackState desired) {
+        long target = desired.targetPositionMillis(session.estimatedServerTimeMillis);
+        return desired.looping() && session.durationMillis > 0 ? target % session.durationMillis : target;
     }
 
     private static void setRate(Session session, double requestedRate) {
@@ -221,12 +343,29 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
     }
 
     private void failLocked(Session session, String stage, Throwable cause) {
-        session.failed = true;
-        try {
-            session.player().close();
-        } catch (RuntimeException ignored) {
+        if (session.failed) {
+            return;
         }
-        failureHandler.accept(new PlaybackFailure(session.id(), stage, cause));
+        session.failed = true;
+        session.ready = false;
+        session.failedRevision = session.desiredState == null ? -1 : session.desiredState.revision();
+        try {
+            if (session.player() != null) {
+                session.player().close();
+            }
+        } catch (RuntimeException ignored) {
+        } finally {
+            session.frames().close();
+        }
+        notifyFailure(new PlaybackFailure(session.id(), stage, cause));
+    }
+
+    private void notifyFailure(PlaybackFailure failure) {
+        try {
+            failureHandler.accept(failure);
+        } catch (RuntimeException ignored) {
+            // A diagnostic callback must not take down the client tick thread.
+        }
     }
 
     private boolean isCurrent(Session session) {
@@ -244,6 +383,12 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         return error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
     }
 
+    private static void cancel(CompletionStage<?> stage) {
+        if (stage instanceof Future<?>) {
+            ((Future<?>) stage).cancel(true);
+        }
+    }
+
     private void requireOpen() {
         if (closed) {
             throw new IllegalStateException("Playback coordinator is closed");
@@ -257,7 +402,10 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         }
         closed = true;
         for (Session session : sessions.values()) {
-            session.close();
+            try {
+                session.close();
+            } catch (RuntimeException ignored) {
+            }
         }
         sessions.clear();
     }
@@ -267,13 +415,18 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
         private final MediaDescriptor media;
         private final MediaPlayer player;
         private final LatestFrameQueue frames;
+        private CompletionStage<?> resolution;
         private PlaybackState desiredState;
         private long estimatedServerTimeMillis;
         private long appliedRevision = -1;
+        private long failedRevision = -1;
+        private long endedRevision = -1;
         private long lastDriftCheckMillis;
+        private long durationMillis = -1;
         private double appliedRate = Double.NaN;
         private boolean ready;
         private boolean failed;
+        private boolean ended;
 
         private Session(UUID id, MediaDescriptor media, MediaPlayer player, LatestFrameQueue frames) {
             this.id = id;
@@ -300,8 +453,12 @@ public final class ScreenPlaybackCoordinator implements AutoCloseable {
 
         @Override
         public void close() {
+            cancel(resolution);
+            resolution = null;
             try {
-                player.close();
+                if (player != null) {
+                    player.close();
+                }
             } finally {
                 frames.close();
             }

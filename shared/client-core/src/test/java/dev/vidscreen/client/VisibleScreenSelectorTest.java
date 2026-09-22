@@ -16,6 +16,7 @@ import dev.vidscreen.domain.ScreenDefinition;
 import dev.vidscreen.domain.ScreenFit;
 import dev.vidscreen.domain.ScreenGeometry;
 import dev.vidscreen.domain.ScreenState;
+import dev.vidscreen.domain.ScreenStyle;
 
 class VisibleScreenSelectorTest {
     @Test
@@ -45,12 +46,45 @@ class VisibleScreenSelectorTest {
     }
 
     @Test
-    void computesFloorDividedAnchorChunks() {
+    void anchorsToTheOffsetPhysicalSurfaceAcrossChunkBoundaries() {
         ScreenState negative = screen(
                 "00000000-0000-0000-0000-000000000006", "minecraft:overworld", -17, 32, true);
 
         assertEquals(-1, VisibleScreenSelector.anchorChunkX(negative));
-        assertEquals(0, VisibleScreenSelector.anchorChunkZ(negative));
+        assertEquals(-1, VisibleScreenSelector.anchorChunkZ(negative));
+    }
+
+    @Test
+    void usesCurvedStyledMidpointForDistanceAndAnchorChunk() {
+        ScreenGeometry geometry = ScreenGeometry.between(
+                new BlockPoint(0, 64, 15),
+                new BlockPoint(15, 65, 15),
+                Facing.NORTH);
+        ScreenDefinition definition = new ScreenDefinition(
+                UUID.fromString("00000000-0000-0000-0000-000000000007"),
+                "curved",
+                new DimensionKey("minecraft:overworld"),
+                geometry,
+                ScreenFit.CONTAIN,
+                1,
+                new ScreenStyle(170, 32, 0, 0, 0),
+                null);
+        ScreenState curved = new ScreenState(
+                1,
+                definition,
+                new MediaDescriptor("direct", "https://media.example/video.mp4"),
+                PlaybackState.stopped(1, 0));
+        ScreenMesh.Vertex midpoint = ScreenMesh.midpoint(geometry, definition.style());
+
+        assertEquals(1, VisibleScreenSelector.anchorChunkZ(curved));
+        assertEquals(1, new VisibleScreenSelector(1).select(
+                Arrays.asList(curved),
+                "minecraft:overworld",
+                midpoint.x(), midpoint.y(), midpoint.z()).size());
+        assertEquals(0, new VisibleScreenSelector(1).select(
+                Arrays.asList(curved),
+                "minecraft:overworld",
+                8, 65, 15.5).size());
     }
 
     private static ScreenState screen(

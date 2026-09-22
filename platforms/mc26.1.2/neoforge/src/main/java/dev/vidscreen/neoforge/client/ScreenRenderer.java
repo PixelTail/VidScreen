@@ -1,5 +1,9 @@
 package dev.vidscreen.neoforge.client;
 
+import dev.vidscreen.client.ClientScreenStore;
+import dev.vidscreen.client.ScreenMesh;
+import dev.vidscreen.client.SelectionOverlay;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,16 +25,15 @@ import net.neoforged.neoforge.client.event.ExtractLevelRenderStateEvent;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
 import dev.vidscreen.client.VisibleScreenSelector;
-import dev.vidscreen.domain.BlockPoint;
 import dev.vidscreen.domain.PlaybackStatus;
-import dev.vidscreen.domain.ScreenGeometry;
 import dev.vidscreen.domain.ScreenState;
+import dev.vidscreen.domain.ViewingArea;
 import dev.vidscreen.neoforge.VidScreenNeoForge;
 
 @EventBusSubscriber(modid = VidScreenNeoForge.MOD_ID, value = net.neoforged.api.distmarker.Dist.CLIENT)
 final class ScreenRenderer {
     private static final int FULL_BRIGHT = 0x00F000F0;
-    private static final ContextKey<List<RenderState>> DATA_KEY = new ContextKey<>(
+    private static final ContextKey<FrameState> DATA_KEY = new ContextKey<>(
             Identifier.fromNamespaceAndPath(VidScreenNeoForge.MOD_ID, "screen_render_states"));
 
     private static ClientScreenStore store;
@@ -53,7 +56,7 @@ final class ScreenRenderer {
         double viewerX = Minecraft.getInstance().player.getX();
         double viewerY = Minecraft.getInstance().player.getY();
         double viewerZ = Minecraft.getInstance().player.getZ();
-        Collection<ScreenState> screens = store.snapshot();
+        Collection<ScreenState> screens = store.renderSnapshot();
         List<RenderState> states = new ArrayList<>(screens.size());
         for (ScreenState screen : screens) {
             if (!screen.definition().dimension().value().equals(dimension)
@@ -63,45 +66,91 @@ final class ScreenRenderer {
             }
             float[] color = color(screen.playback().status());
             UUID screenId = screen.definition().id();
+            Identifier texture = textures.texture(screenId);
+            List<ScreenMesh.Quad> placeholder = ScreenMesh.surface(
+                    screen.definition().geometry(), screen.definition().style());
+            List<ScreenMesh.Quad> content;
+            List<ScreenMesh.Quad> background;
+            if (texture == null) {
+                content = placeholder;
+                background = List.of();
+            } else {
+                ScreenMesh.Layout layout = ScreenMesh.video(
+                        screen.definition().geometry(), screen.definition().fit(), screen.definition().style());
+                content = layout.contentQuads();
+                background = layout.backgroundQuads();
+            }
             states.add(new RenderState(
-                    screen.definition().geometry(),
-                    textures.texture(screenId),
+                    screenId,
+                    placeholder,
+                    content,
+                    background,
+                    texture,
                     color[0], color[1], color[2], color[3]));
         }
-        if (!states.isEmpty()) {
-            event.getRenderState().setRenderData(DATA_KEY, List.copyOf(states));
+        List<SelectionOverlay.Line> overlayLines = extractOverlays(dimension);
+        if (!states.isEmpty() || !overlayLines.isEmpty()) {
+            event.getRenderState().setRenderData(
+                    DATA_KEY, new FrameState(List.copyOf(states), overlayLines));
         }
+    }
+
+    private static List<SelectionOverlay.Line> extractOverlays(String dimension) {
+        List<SelectionOverlay.Line> lines = new ArrayList<>();
+        ViewingArea area = store.areaPreview();
+        if (area != null && area.dimension().value().equals(dimension)) {
+            lines.addAll(SelectionOverlay.viewingArea(area));
+        }
+        if (dimension.equals(store.previewDimension())) {
+            lines.addAll(SelectionOverlay.selectionPoints(store.selectionPoints()));
+        }
+        return List.copyOf(lines);
     }
 
     @SubscribeEvent
     static void submit(SubmitCustomGeometryEvent event) {
-        List<RenderState> states = event.getLevelRenderState().getRenderData(DATA_KEY);
-        if (states == null) {
+        FrameState frame = event.getLevelRenderState().getRenderData(DATA_KEY);
+        if (frame == null) {
             return;
         }
         PoseStack poses = event.getPoseStack();
         Vec3 camera = event.getLevelRenderState().cameraRenderState.pos;
         poses.pushPose();
         poses.translate(-camera.x, -camera.y, -camera.z);
-        for (RenderState state : states) {
-            if (state.texture() == null) {
+        for (RenderState state : frame.screens()) {
+            if (state.texture() == null || !textures.isLive(state.screenId(), state.texture())) {
                 event.getSubmitNodeCollector().submitCustomGeometry(
                         poses,
                         RenderTypes.debugQuads(),
-                        (pose, vertices) -> emitColored(pose.pose(), vertices, state));
+                        (pose, vertices) -> emitColored(
+                                pose.pose(), vertices, state.placeholder(),
+                                state.red(), state.green(), state.blue(), state.alpha()));
             } else {
+                if (!state.background().isEmpty()) {
+                    event.getSubmitNodeCollector().submitCustomGeometry(
+                            poses,
+                            RenderTypes.debugQuads(),
+                            (pose, vertices) -> emitColored(
+                                    pose.pose(), vertices, state.background(), 0, 0, 0, 1));
+                }
                 event.getSubmitNodeCollector().submitCustomGeometry(
                         poses,
                         RenderTypes.entityTranslucentEmissive(state.texture()),
-                        (pose, vertices) -> emitTextured(pose.pose(), vertices, state.geometry()));
+                        (pose, vertices) -> emitTextured(pose.pose(), vertices, state.content()));
             }
+        }
+        if (!frame.overlayLines().isEmpty()) {
+            event.getSubmitNodeCollector().submitCustomGeometry(
+                    poses,
+                    RenderTypes.linesTranslucent(),
+                    (pose, vertices) -> emitLines(pose.pose(), vertices, frame.overlayLines()));
         }
         poses.popPose();
     }
 
     private static boolean isAnchorChunkLoaded(ScreenState screen) {
         return Minecraft.getInstance().level != null
-                && Minecraft.getInstance().level.hasChunk(
+                && Minecraft.getInstance().level.getChunkSource().hasChunk(
                         VisibleScreenSelector.anchorChunkX(screen),
                         VisibleScreenSelector.anchorChunkZ(screen));
     }
@@ -116,75 +165,69 @@ final class ScreenRenderer {
         };
     }
 
-    private static void emitColored(Matrix4fc matrix, VertexConsumer vertices, RenderState state) {
-        emitGeometry(state.geometry(), (x, y, z, u, v, nx, ny, nz) -> vertices
-                .addVertex(matrix, x, y, z)
-                .setColor(state.red(), state.green(), state.blue(), state.alpha()));
-    }
-
-    private static void emitTextured(Matrix4fc matrix, VertexConsumer vertices, ScreenGeometry geometry) {
-        emitGeometry(geometry, (x, y, z, u, v, nx, ny, nz) -> vertices
-                .addVertex(matrix, x, y, z)
-                .setColor(255, 255, 255, 255)
-                .setUv(u, v)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(FULL_BRIGHT)
-                .setNormal(nx, ny, nz));
-    }
-
-    private static void emitGeometry(ScreenGeometry geometry, QuadVertex vertex) {
-        BlockPoint min = geometry.min();
-        BlockPoint max = geometry.max();
-        float x0 = min.x();
-        float y0 = min.y();
-        float z0 = min.z();
-        float x1 = max.x() + 1;
-        float y1 = max.y() + 1;
-        float z1 = max.z() + 1;
-        float offset = 0.002f;
-
-        switch (geometry.facing()) {
-            case NORTH -> emitQuad(vertex,
-                    x1, y0, z0 - offset, x0, y0, z0 - offset,
-                    x0, y1, z0 - offset, x1, y1, z0 - offset, 0, 0, -1);
-            case SOUTH -> emitQuad(vertex,
-                    x0, y0, z1 + offset, x1, y0, z1 + offset,
-                    x1, y1, z1 + offset, x0, y1, z1 + offset, 0, 0, 1);
-            case WEST -> emitQuad(vertex,
-                    x0 - offset, y0, z0, x0 - offset, y0, z1,
-                    x0 - offset, y1, z1, x0 - offset, y1, z0, -1, 0, 0);
-            case EAST -> emitQuad(vertex,
-                    x1 + offset, y0, z1, x1 + offset, y0, z0,
-                    x1 + offset, y1, z0, x1 + offset, y1, z1, 1, 0, 0);
-            case DOWN -> emitQuad(vertex,
-                    x0, y0 - offset, z1, x1, y0 - offset, z1,
-                    x1, y0 - offset, z0, x0, y0 - offset, z0, 0, -1, 0);
-            case UP -> emitQuad(vertex,
-                    x0, y1 + offset, z0, x1, y1 + offset, z0,
-                    x1, y1 + offset, z1, x0, y1 + offset, z1, 0, 1, 0);
+    private static void emitColored(
+            Matrix4fc matrix,
+            VertexConsumer vertices,
+            List<ScreenMesh.Quad> quads,
+            float red,
+            float green,
+            float blue,
+            float alpha) {
+        for (ScreenMesh.Quad quad : quads) {
+            quad.emit((x, y, z, u, v, nx, ny, nz) -> vertices
+                    .addVertex(matrix, x, y, z)
+                    .setColor(red, green, blue, alpha));
         }
     }
 
-    private static void emitQuad(
-            QuadVertex vertex,
-            float ax, float ay, float az,
-            float bx, float by, float bz,
-            float cx, float cy, float cz,
-            float dx, float dy, float dz,
-            float nx, float ny, float nz) {
-        vertex.add(ax, ay, az, 0, 1, nx, ny, nz);
-        vertex.add(bx, by, bz, 1, 1, nx, ny, nz);
-        vertex.add(cx, cy, cz, 1, 0, nx, ny, nz);
-        vertex.add(dx, dy, dz, 0, 0, nx, ny, nz);
+    private static void emitTextured(
+            Matrix4fc matrix,
+            VertexConsumer vertices,
+            List<ScreenMesh.Quad> quads) {
+        for (ScreenMesh.Quad quad : quads) {
+            quad.emit((x, y, z, u, v, nx, ny, nz) -> vertices
+                    .addVertex(matrix, x, y, z)
+                    .setColor(255, 255, 255, 255)
+                    .setUv(u, v)
+                    .setOverlay(OverlayTexture.NO_OVERLAY)
+                    .setLight(FULL_BRIGHT)
+                    .setNormal(nx, ny, nz));
+        }
     }
 
-    @FunctionalInterface
-    private interface QuadVertex {
-        void add(float x, float y, float z, float u, float v, float nx, float ny, float nz);
+    private static void emitLines(
+            Matrix4fc matrix,
+            VertexConsumer vertices,
+            List<SelectionOverlay.Line> lines) {
+        for (SelectionOverlay.Line line : lines) {
+            float dx = line.end().x() - line.start().x();
+            float dy = line.end().y() - line.start().y();
+            float dz = line.end().z() - line.start().z();
+            float length = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+            float nx = dx / length;
+            float ny = dy / length;
+            float nz = dz / length;
+            vertices.addVertex(matrix, line.start().x(), line.start().y(), line.start().z())
+                    .setColor(line.red(), line.green(), line.blue(), line.alpha())
+                    .setNormal(nx, ny, nz)
+                    .setLineWidth(line.width());
+            vertices.addVertex(matrix, line.end().x(), line.end().y(), line.end().z())
+                    .setColor(line.red(), line.green(), line.blue(), line.alpha())
+                    .setNormal(nx, ny, nz)
+                    .setLineWidth(line.width());
+        }
+    }
+
+    private record FrameState(
+            List<RenderState> screens,
+            List<SelectionOverlay.Line> overlayLines) {
     }
 
     private record RenderState(
-            ScreenGeometry geometry,
+            UUID screenId,
+            List<ScreenMesh.Quad> placeholder,
+            List<ScreenMesh.Quad> content,
+            List<ScreenMesh.Quad> background,
             Identifier texture,
             float red,
             float green,

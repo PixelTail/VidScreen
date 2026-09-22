@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import dev.vidscreen.domain.BlockPoint;
-import dev.vidscreen.domain.ScreenGeometry;
 import dev.vidscreen.domain.ScreenState;
 
 public final class VisibleScreenSelector {
@@ -31,7 +29,7 @@ public final class VisibleScreenSelector {
             if (screen.media() == null || !screen.definition().dimension().value().equals(dimension)) {
                 continue;
             }
-            double distanceSquared = distanceSquared(screen.definition().geometry(), viewerX, viewerY, viewerZ);
+            double distanceSquared = distanceSquared(screen, viewerX, viewerY, viewerZ);
             if (isWithinViewDistance(screen, viewerX, viewerY, viewerZ)) {
                 candidates.add(new Candidate(screen, distanceSquared));
             }
@@ -54,40 +52,32 @@ public final class VisibleScreenSelector {
             double viewerY,
             double viewerZ) {
         double viewDistance = screen.definition().viewDistance();
-        return distanceSquared(screen.definition().geometry(), viewerX, viewerY, viewerZ)
+        return distanceSquared(screen, viewerX, viewerY, viewerZ)
                 <= viewDistance * viewDistance;
     }
 
     public static int anchorChunkX(ScreenState screen) {
-        return Math.floorDiv(centerCoordinate(
-                screen.definition().geometry().min().x(),
-                screen.definition().geometry().max().x()), 16);
+        return (int) Math.floor(midpoint(screen).x() / 16.0);
     }
 
     public static int anchorChunkZ(ScreenState screen) {
-        return Math.floorDiv(centerCoordinate(
-                screen.definition().geometry().min().z(),
-                screen.definition().geometry().max().z()), 16);
-    }
-
-    private static int centerCoordinate(int minimum, int maximum) {
-        return minimum + (maximum - minimum + 1) / 2;
+        return (int) Math.floor(midpoint(screen).z() / 16.0);
     }
 
     private static double distanceSquared(
-            ScreenGeometry geometry,
+            ScreenState screen,
             double viewerX,
             double viewerY,
             double viewerZ) {
-        BlockPoint min = geometry.min();
-        BlockPoint max = geometry.max();
-        double centerX = min.x() + (max.x() - min.x() + 1.0) / 2.0;
-        double centerY = min.y() + (max.y() - min.y() + 1.0) / 2.0;
-        double centerZ = min.z() + (max.z() - min.z() + 1.0) / 2.0;
-        double deltaX = centerX - viewerX;
-        double deltaY = centerY - viewerY;
-        double deltaZ = centerZ - viewerZ;
+        ScreenMesh.Vertex center = midpoint(screen);
+        double deltaX = center.x() - viewerX;
+        double deltaY = center.y() - viewerY;
+        double deltaZ = center.z() - viewerZ;
         return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+    }
+
+    private static ScreenMesh.Vertex midpoint(ScreenState screen) {
+        return ScreenMesh.midpoint(screen.definition().geometry(), screen.definition().style());
     }
 
     private static final class Candidate {

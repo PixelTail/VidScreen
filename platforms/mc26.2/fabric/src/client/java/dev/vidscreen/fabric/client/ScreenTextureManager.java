@@ -76,6 +76,11 @@ final class ScreenTextureManager implements AutoCloseable {
         return entry == null ? null : entry.location();
     }
 
+    boolean isLive(UUID screenId, Identifier location) {
+        Entry entry = entries.get(screenId);
+        return entry != null && entry.location().equals(location);
+    }
+
     void clear() {
         UUID[] screenIds = entries.keySet().toArray(UUID[]::new);
         for (UUID screenId : screenIds) {

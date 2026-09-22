@@ -15,6 +15,8 @@ public final class ScreenDefinition {
     private final ScreenGeometry geometry;
     private final ScreenFit fit;
     private final double viewDistance;
+    private final ScreenStyle style;
+    private final UUID viewingAreaId;
 
     public ScreenDefinition(
             UUID id,
@@ -23,6 +25,11 @@ public final class ScreenDefinition {
             ScreenGeometry geometry,
             ScreenFit fit,
             double viewDistance) {
+        this(id, name, dimension, geometry, fit, viewDistance, ScreenStyle.FLAT, null);
+    }
+
+    public ScreenDefinition(UUID id, String name, DimensionKey dimension, ScreenGeometry geometry,
+            ScreenFit fit, double viewDistance, ScreenStyle style, UUID viewingAreaId) {
         this.id = Objects.requireNonNull(id, "id");
         Objects.requireNonNull(name, "name");
         String normalizedName = name.toLowerCase(Locale.ROOT);
@@ -40,7 +47,12 @@ public final class ScreenDefinition {
         this.geometry = Objects.requireNonNull(geometry, "geometry");
         this.fit = Objects.requireNonNull(fit, "fit");
         this.viewDistance = viewDistance;
+        this.style = Objects.requireNonNull(style, "style");
+        this.viewingAreaId = viewingAreaId;
     }
+
+    public ScreenStyle style() { return style; }
+    public UUID viewingAreaId() { return viewingAreaId; }
 
     public UUID id() {
         return id;
@@ -80,11 +92,11 @@ public final class ScreenDefinition {
                 && name.equals(that.name)
                 && dimension.equals(that.dimension)
                 && geometry.equals(that.geometry)
-                && fit == that.fit;
+                && fit == that.fit && style.equals(that.style) && Objects.equals(viewingAreaId, that.viewingAreaId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, dimension, geometry, fit, viewDistance);
+        return Objects.hash(id, name, dimension, geometry, fit, viewDistance, style, viewingAreaId);
     }
 }

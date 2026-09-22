@@ -1,6 +1,5 @@
 package dev.vidscreen.paper;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.vidscreen.domain.Facing;
 import dev.vidscreen.domain.MediaDescriptor;
+import dev.vidscreen.domain.MediaSources;
 import dev.vidscreen.domain.PlaybackStatus;
 import dev.vidscreen.domain.ScreenDefinition;
 import dev.vidscreen.domain.ScreenFit;
@@ -31,7 +31,7 @@ import dev.vidscreen.server.ScreenService;
 final class VidScreenCommand implements CommandExecutor, TabCompleter {
     private static final List<String> SUBCOMMANDS = Arrays.asList(
             "wand", "pos1", "pos2", "create", "list", "delete", "source",
-            "play", "pause", "stop", "seek", "loop", "sync");
+            "play", "pause", "stop", "seek", "loop", "sync", "status");
 
     private final VidScreenPaperPlugin plugin;
     private final ScreenService screens;
@@ -92,6 +92,8 @@ final class VidScreenCommand implements CommandExecutor, TabCompleter {
                     return loop(sender, args);
                 case "sync":
                     return sync(sender);
+                case "status":
+                    return status(sender);
                 default:
                     usage(sender);
                     return true;
@@ -195,11 +197,8 @@ final class VidScreenCommand implements CommandExecutor, TabCompleter {
             throw new IllegalArgumentException("Usage: /vidscreen source <name> <https-url> [resolver]");
         }
         ScreenState screen = requireNamedScreen(args, 3, "Usage: /vidscreen source <name> <https-url> [resolver]");
-        URI source = URI.create(args[2]);
-        validateSource(source);
-        String resolver = args.length == 4 ? args[3].toLowerCase(Locale.ROOT) : inferResolver(source);
-        validateResolverSource(resolver, source);
-        MediaDescriptor media = new MediaDescriptor(resolver, source.toASCIIString());
+        String resolver = args.length == 4 ? args[3] : null;
+        MediaDescriptor media = MediaSources.parse(args[2], resolver);
 
         plugin.mutate(sender,
                 () -> screens.setMedia(screen.definition().id(), media, System.currentTimeMillis()),
@@ -277,6 +276,15 @@ final class VidScreenCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean status(CommandSender sender) {
+        Player player = requirePlayer(sender);
+        if (!sender.hasPermission("vidscreen.use")) {
+            throw new IllegalArgumentException("You do not have permission to use VidScreen.");
+        }
+        player.sendMessage(Component.text("VidScreen client: " + messenger.describeClient(player), NamedTextColor.AQUA));
+        return true;
+    }
+
     private ScreenState requireNamedScreen(String[] args, int expectedMinimum, String usage) {
         if (args.length < expectedMinimum) {
             throw new IllegalArgumentException(usage);
@@ -286,61 +294,6 @@ final class VidScreenCommand implements CommandExecutor, TabCompleter {
             throw new IllegalArgumentException("Unknown screen: " + args[1]);
         }
         return screen;
-    }
-
-    private static void validateSource(URI source) {
-        if (!source.isAbsolute() || !"https".equalsIgnoreCase(source.getScheme()) || source.getHost() == null) {
-            throw new IllegalArgumentException("Media source must be an absolute HTTPS URL.");
-        }
-        if (source.getRawUserInfo() != null || source.getRawFragment() != null) {
-            throw new IllegalArgumentException("Media source cannot contain credentials or a fragment.");
-        }
-        if (source.getPort() != -1 && source.getPort() != 443) {
-            throw new IllegalArgumentException("Media source must use the default HTTPS port.");
-        }
-    }
-
-    private static String inferResolver(URI source) {
-        String host = source.getHost().toLowerCase(Locale.ROOT);
-        if (providerHost(host, "bilibili.com") || providerHost(host, "b23.tv")) {
-            return "bilibili";
-        }
-        if (providerHost(host, "youtube.com") || providerHost(host, "youtu.be")) {
-            return "youtube";
-        }
-        if (providerHost(host, "twitch.tv")) {
-            return "twitch";
-        }
-        return "direct";
-    }
-
-    private static void validateResolverSource(String resolver, URI source) {
-        String host = source.getHost().toLowerCase(Locale.ROOT);
-        String path = source.getPath().toLowerCase(Locale.ROOT);
-        boolean valid;
-        switch (resolver) {
-            case "direct":
-                valid = path.endsWith(".mp4") || path.endsWith(".m3u8");
-                break;
-            case "bilibili":
-                valid = providerHost(host, "bilibili.com") || providerHost(host, "b23.tv");
-                break;
-            case "youtube":
-                valid = providerHost(host, "youtube.com") || providerHost(host, "youtu.be");
-                break;
-            case "twitch":
-                valid = providerHost(host, "twitch.tv");
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown media resolver: " + resolver);
-        }
-        if (!valid) {
-            throw new IllegalArgumentException("Media URL does not match resolver " + resolver + ".");
-        }
-    }
-
-    private static boolean providerHost(String host, String suffix) {
-        return host.equals(suffix) || host.endsWith("." + suffix);
     }
 
     private static Player requirePlayer(CommandSender sender) {

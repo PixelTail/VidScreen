@@ -30,6 +30,10 @@ neoForge {
     }
 }
 
+sourceSets.named("main") {
+    java.srcDir("../client-ui/src/main/java")
+}
+
 dependencies {
     implementation(project(":shared:domain"))
     implementation(project(":shared:protocol"))

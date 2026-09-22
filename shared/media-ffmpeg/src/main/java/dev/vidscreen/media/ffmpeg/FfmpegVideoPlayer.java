@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import dev.vidscreen.media.MediaPlayer;
+import dev.vidscreen.media.MediaPlayerState;
 import dev.vidscreen.media.PixelFormat;
 import dev.vidscreen.media.ResolvedMedia;
 import dev.vidscreen.media.VideoFrame;
@@ -39,6 +40,8 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
     private long positionMicros;
     private double rate = 1.0;
     private boolean playing;
+    private boolean ended;
+    private Throwable failure;
     private boolean closed;
 
     public FfmpegVideoPlayer(Path ffmpeg, Path ffprobe, int outputWidth, int outputHeight) {
@@ -71,6 +74,8 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
                     probe = inspected;
                     positionMicros = 0;
                     playing = false;
+                    ended = false;
+                    failure = null;
                 }
             } catch (IOException error) {
                 throw new FfmpegException("Could not probe media", error);
@@ -82,12 +87,46 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
     }
 
     @Override
+    public MediaPlayerState state() {
+        synchronized (lock) {
+            if (closed) {
+                return MediaPlayerState.CLOSED;
+            }
+            if (failure != null) {
+                return MediaPlayerState.FAILED;
+            }
+            if (media == null || probe == null) {
+                return MediaPlayerState.OPENING;
+            }
+            if (ended) {
+                return MediaPlayerState.ENDED;
+            }
+            return playing ? MediaPlayerState.PLAYING : MediaPlayerState.PAUSED;
+        }
+    }
+
+    @Override
+    public long durationMillis() {
+        synchronized (lock) {
+            return probe == null ? -1L : probe.durationMillis();
+        }
+    }
+
+    @Override
+    public Throwable failure() {
+        synchronized (lock) {
+            return failure;
+        }
+    }
+
+    @Override
     public void play() {
         synchronized (lock) {
             requireReady();
             if (playing) {
                 return;
             }
+            ended = false;
             playing = true;
             startProcessLocked(false);
         }
@@ -114,6 +153,7 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
         synchronized (lock) {
             requireReady();
             positionMicros = Math.multiplyExact(position.toMillis(), 1_000);
+            ended = false;
             boolean restart = playing;
             stopProcessLocked();
             if (restart) {
@@ -262,6 +302,7 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
                 if (run == expectedRun) {
                     positionMicros = startMicros + Math.round(frameIndex * frameDurationMicros * playbackRate);
                     playing = false;
+                    ended = true;
                     process = null;
                     run = null;
                 }
@@ -271,6 +312,8 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
                 synchronized (lock) {
                     if (run == expectedRun) {
                         playing = false;
+                        ended = false;
+                        failure = new FfmpegException("FFmpeg media decoding failed", error);
                         process = null;
                         run = null;
                     }
@@ -305,6 +348,10 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
     }
 
     private void stopProcessLocked() {
+        stopProcessLocked(true);
+    }
+
+    private void stopProcessLocked(boolean waitForExit) {
         FutureRun current = run;
         run = null;
         Process currentProcess = process;
@@ -314,6 +361,9 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
         }
         if (currentProcess != null) {
             currentProcess.destroy();
+            if (!waitForExit) {
+                return;
+            }
             try {
                 if (!currentProcess.waitFor(2, TimeUnit.SECONDS)) {
                     currentProcess.destroyForcibly();
@@ -346,13 +396,18 @@ public final class FfmpegVideoPlayer implements MediaPlayer {
             }
             closed = true;
             playing = false;
-            stopProcessLocked();
+            // Do not wait on the game thread during shutdown. The process is
+            // destroyed here and daemon workers finish draining it in the
+            // background; close makes no hard process-termination guarantee.
+            stopProcessLocked(false);
             if (frameSink != null) {
                 frameSink.close();
                 frameSink = null;
             }
             media = null;
             probe = null;
+            ended = false;
+            failure = null;
         }
         executor.shutdownNow();
     }

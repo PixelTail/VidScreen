@@ -13,6 +13,7 @@
 /runs/
 /server/
 /test-server/
+platforms/**/run/
 /logs/
 /crash-reports/
 /world/

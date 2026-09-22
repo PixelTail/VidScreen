@@ -26,6 +26,11 @@ configurations.named("testRuntimeClasspath") {
     extendsFrom(runtimeContents)
 }
 
+tasks.test {
+    systemProperty("vidscreen.runNativeMediaIntegration",
+        providers.systemProperty("vidscreen.runNativeMediaIntegration").getOrElse("false"))
+}
+
 tasks.jar {
     dependsOn(project(":shared:media-ffmpeg-native").tasks.named("classes"))
     from(project(":shared:media-ffmpeg-native")

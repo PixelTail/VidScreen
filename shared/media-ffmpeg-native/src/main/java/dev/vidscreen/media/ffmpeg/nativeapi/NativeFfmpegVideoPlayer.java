@@ -14,6 +14,7 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 
 import dev.vidscreen.media.MediaPlayer;
+import dev.vidscreen.media.MediaPlayerState;
 import dev.vidscreen.media.ResolvedMedia;
 import dev.vidscreen.media.VideoFrame;
 import dev.vidscreen.media.VideoFrameSink;
@@ -37,9 +38,12 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
     private long positionMicros;
     private long pendingSeekMicros = -1;
     private long timingRevision;
+    private long durationMillis = -1;
     private double rate = 1.0;
     private boolean playing;
     private boolean frameRequested;
+    private boolean ended;
+    private Throwable failure;
     private boolean ready;
     private boolean closed;
 
@@ -91,10 +95,47 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
     }
 
     @Override
+    public MediaPlayerState state() {
+        synchronized (lock) {
+            if (closed) {
+                return MediaPlayerState.CLOSED;
+            }
+            if (failure != null) {
+                return MediaPlayerState.FAILED;
+            }
+            if (opening != null) {
+                return MediaPlayerState.OPENING;
+            }
+            if (!ready) {
+                return MediaPlayerState.UNKNOWN;
+            }
+            if (ended) {
+                return MediaPlayerState.ENDED;
+            }
+            return playing ? MediaPlayerState.PLAYING : MediaPlayerState.PAUSED;
+        }
+    }
+
+    @Override
+    public long durationMillis() {
+        synchronized (lock) {
+            return durationMillis;
+        }
+    }
+
+    @Override
+    public Throwable failure() {
+        synchronized (lock) {
+            return failure;
+        }
+    }
+
+    @Override
     public void play() {
         synchronized (lock) {
             requireReady();
             if (!playing) {
+                ended = false;
                 playing = true;
                 timingRevision++;
                 lock.notifyAll();
@@ -125,6 +166,7 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
             requireReady();
             positionMicros = requestedMicros;
             pendingSeekMicros = requestedMicros;
+            ended = false;
             timingRevision++;
             lock.notifyAll();
         }
@@ -183,6 +225,7 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
 
             int sourceWidth = decoder.getImageWidth();
             int sourceHeight = decoder.getImageHeight();
+            long lengthMicros = decoder.getLengthInTime();
             RgbaFrameCopier.Dimensions dimensions = RgbaFrameCopier.fit(
                     sourceWidth, sourceHeight, outputWidth, outputHeight);
             decoder.setImageWidth(dimensions.width());
@@ -195,6 +238,9 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
                 }
                 grabber = decoder;
                 opening = null;
+                durationMillis = toDurationMillis(lengthMicros);
+                failure = null;
+                ended = false;
                 ready = true;
             }
             openFuture.complete(null);
@@ -206,6 +252,8 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
                 if (isCurrent(expectedGeneration)) {
                     ready = false;
                     playing = false;
+                    ended = false;
+                    failure = sanitized;
                     grabber = null;
                     if (opening == openFuture) {
                         opening = null;
@@ -248,6 +296,7 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
                 synchronized (lock) {
                     if (isCurrent(expectedGeneration)) {
                         playing = false;
+                        ended = true;
                         timingRevision++;
                     }
                 }
@@ -346,6 +395,14 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
         return decoder;
     }
 
+    private static long toDurationMillis(long durationMicros) {
+        if (durationMicros <= 0) {
+            return -1L;
+        }
+        long millis = durationMicros / 1_000L;
+        return millis > 0 ? millis : 1L;
+    }
+
     private boolean isCurrent(long expectedGeneration) {
         return !closed && generation == expectedGeneration;
     }
@@ -377,6 +434,9 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
             ready = false;
             frameRequested = false;
             pendingSeekMicros = -1;
+            ended = false;
+            failure = null;
+            durationMillis = -1;
             sink = frameSink;
             frameSink = null;
             media = null;
@@ -390,6 +450,11 @@ public final class NativeFfmpegVideoPlayer implements MediaPlayer {
         if (sink != null) {
             sink.close();
         }
+        // Do not close the grabber from this thread while grabImage() may be
+        // running on the decoder thread. shutdownNow interrupts Java waits,
+        // but native I/O may continue until the configured 15-second
+        // IO_TIMEOUT_MICROS limit expires. This method intentionally makes
+        // no hard cancellation guarantee.
         executor.shutdownNow();
     }
 

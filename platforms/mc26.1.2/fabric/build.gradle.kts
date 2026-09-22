@@ -17,6 +17,10 @@ loom {
     }
 }
 
+sourceSets.named("client") {
+    java.srcDir("../client-ui/src/main/java")
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:26.1.2")
     implementation("net.fabricmc:fabric-loader:0.19.3")

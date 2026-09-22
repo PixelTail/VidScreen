@@ -9,7 +9,10 @@ public enum MessageType {
     SCREEN_UPSERT(6),
     SCREEN_DELETE(7),
     PLAYBACK_UPDATE(8),
-    OPERATION_RESULT(9);
+    OPERATION_RESULT(9),
+    EDITOR_REQUEST(10),
+    SCENE_SNAPSHOT(11),
+    SCENE_UPSERT(12);
 
     private final int id;
 
