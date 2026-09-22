@@ -53,6 +53,8 @@ The original external-process adapter remains available when the companion runti
 
 A client advertises direct MP4/HLS capability when the bundled native runtime loads or both fallback FFmpeg executables are found. Provider capability bits are added only when yt-dlp is also found. Direct MP4/HLS does not require yt-dlp. Missing media backends disable playback without preventing the control mod from loading.
 
+This capability negotiation is not a provider playback acceptance result. The [2026-09-22 anonymous provider tests](PROVIDER_PLAYBACK.md) found that Bilibili VOD failed the current combined-format selector, Bilibili/Twitch live failed the VOD seek path (both produced frames in a no-seek decoder control), and Douyin live was unsupported. Cookies, audio output and quality selection are not implemented.
+
 No native runtime or executable version is approved for supported release redistribution yet. Users testing either experimental path accept the third-party terms. Do not place generated binaries or native extracts in Git.
 
 ## Known dependency advisory
