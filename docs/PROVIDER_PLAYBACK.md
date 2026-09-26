@@ -75,3 +75,19 @@ Cookie 能携带账号已经拥有的访问权限；高清档位仍受账号资�
 这是**取流与解码边界**的实验，不是 VidScreen 功能验收：现有 JavaCV 解码器仍在使用，但不再让它直接连接 provider/CDN；Streamlink 在客户端处理 B站 HLS/HTTP、抖音 FLV 等媒体请求后提供统一字节流。它绕过了此次两个直播因点播式 seek 而得到 0 帧的旧路径，并使音频样本与原生画质可进入客户端。然而 Minecraft 音频播放、画面上传、真人登录、直播重连、多人同步和长时运行均未在这个实验中完成。
 
 试验的隔离 Streamlink 环境有 22 个 Python 包，约 46 MB，**未包含**可独立再分发的 Python 解释器；正式客户端若采用这条路线，需要解决平台打包和许可。Streamlink 自身仍会发起网络请求，必须将不可信 URL、跳转与可能的 Cookie 限制在适当的连接边界。当前 MCEF 浏览器模组的[官方版本页](https://modrinth.com/mod/mcef/versions)未列出 Minecraft 26.2，因此不能把嵌入浏览器当作已验证的替代。此处只记录候选实测；尚未改动产品依赖或 [ADR 0005](adr/0005-client-native-media-runtime.md) 的默认方案。
+
+## 2026-09-26：同类开源模组源码对照
+
+用户要求检查现有开源做法，尤其避免要求每个客户端额外安装 Python。审阅以下仓库的**源码与说明**；没有安装这些模组或进行其游戏内验收，README 的平台支持声明不能替代 VidScreen 的兼容性测试。
+
+| 项目 | 源码中的媒体与安装模式 | 对 VidScreen 的判断 |
+|---|---|---|
+| [Dream DisplaysX](https://github.com/kxkl2077/dreamdisplaysx/tree/df5fd10612263865aa6093d93ec7cb1359dc03be)（审阅提交 `df5fd10`） | [B站专用解析器](https://github.com/kxkl2077/dreamdisplaysx/blob/df5fd10612263865aa6093d93ec7cb1359dc03be/media/source/src/main/kotlin/com/dreamdisplayx/media/source/bilibili/BilibiliResolver.kt)在进程内调用 B站 API，直播结果只缓存 25 秒；[结果结构](https://github.com/kxkl2077/dreamdisplaysx/blob/df5fd10612263865aa6093d93ec7cb1359dc03be/api/src/main/kotlin/com/dreamdisplayx/api/media/source/model/ResolvedMedia.kt)区分候选视频/音频流和直播标记；其他网站使用可自动准备的 yt-dlp，解码用原生 libav。 | 值得借鉴**多流结果、短时直播缓存、按需准备客户端工具**。不能把其 README 的“即装即用”直接当作已验证效果。 |
+| [Lumiereplay](https://github.com/jrxmod/lumiereplay/tree/1bc9fc20694fa88af05a0a5361670eb1c281134a) | [VLCJ/libVLC](https://github.com/jrxmod/lumiereplay/blob/1bc9fc20694fa88af05a0a5361670eb1c281134a/src/client/java/com/jrxmod/lumiereplay/client/video/VideoPlayer.java)负责画面；[平台输入](https://github.com/jrxmod/lumiereplay/blob/1bc9fc20694fa88af05a0a5361670eb1c281134a/src/client/java/com/jrxmod/lumiereplay/client/ytdlp/PipeProxy.java)可写入可寻址临时文件以处理需要合并音视频的 MP4。 | 解决点播的可寻址需求，但临时文件流程不是本次直播的主要答案。 |
+| [WaterMedia v3](https://github.com/WaterMediaTeam/watermedia-v3/tree/3849dc53e5c34a5290dce7fbd188f17493f1931a) | [通用 yt-dlp 适配器](https://github.com/WaterMediaTeam/watermedia-v3/blob/3849dc53e5c34a5290dce7fbd188f17493f1931a/src/main/java/org/watermedia/api/platform/web/YtDlpPlatform.java)把提取器给出的请求头传入媒体源。其[许可证与原生包说明](https://github.com/WaterMediaTeam/watermedia-v3)写明 PolyForm Strict 及 GPL 原生 FFmpeg。 | 请求头传递是应补的边界；现成库的许可证和二进制发布方式与本项目现有选择不同，不能直接替换。 |
+
+Dream DisplaysX 的 B站[登录管理器](https://github.com/kxkl2077/dreamdisplaysx/blob/df5fd10612263865aa6093d93ec7cb1359dc03be/platform/client/common/src/main/kotlin/com/dreamdisplayx/platform/client/login/BilibiliLoginManager.kt)把 `SESSDATA` 及刷新令牌通过 Minecraft 命令发送给服务器，再由[服务器凭据仓库](https://github.com/kxkl2077/dreamdisplaysx/blob/df5fd10612263865aa6093d93ec7cb1359dc03be/platform/server/src/main/kotlin/com/dreamdisplayx/platform/server/credentials/CredentialStore.kt)加密保存并回传。**这不是用户所说的“只在本地登录”；VidScreen 不应复制该凭据路径。**
+
+对 Python 的表述也需要更精确：本次隔离实验用 Python 虚拟环境运行 Streamlink，不代表玩家必须自己安装系统 Python。[Streamlink 官方 Windows portable 包](https://streamlink.github.io/install.html)内含嵌入式 Python、Streamlink 依赖和 FFmpeg。Dream DisplaysX 的 [yt-dlp 准备代码](https://github.com/kxkl2077/dreamdisplaysx/blob/df5fd10612263865aa6093d93ec7cb1359dc03be/media/source/src/main/kotlin/com/dreamdisplayx/media/source/youtube/binary/YtDlpBinary.kt)可以在有系统 Python 时选轻量 zipapp，也会回退到独立可执行文件。仍需权衡安装体积、平台包与工具更新；不能把实验虚拟环境直接变成普通客户端的安装要求。
+
+本项目更合适的候选方向是保留已有客户端 JavaCV 解码和服务器只同步元数据的边界，把解析结果扩展为**视频轨、音频轨、请求头、直播状态与刷新时机**。B站可先尝试客户端专用站点适配器，其他来源使用可自行准备的独立工具作为回退；抖音直播可参考已有插件的取流行为但需在 VidScreen 自己的安全与兼容边界内实现。无论采用哪种解析器，直播都需要区别于点播的时间轴、PCM 音频输出和失效恢复。这个判断是源码对照后的建议，**没有改变 ADR 0005 或用户客户端依赖**。
