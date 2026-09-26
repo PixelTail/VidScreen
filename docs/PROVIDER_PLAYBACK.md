@@ -45,3 +45,33 @@ Cookie 能携带账号已经拥有的访问权限；高清档位仍受账号资�
 4. 单独实现并维护抖音直播解析器，加入用户给定房间的测试。Cookie 无法补上当前不存在的解析器。
 
 本次是验证与可行性审查，没有修改上述媒体功能，也没有进行登录态、会员画质、声音或持续直播的成功验收。
+
+## 2026-09-26：跳出单 URL 取流方案的本地管道试验
+
+针对上面的失败，单独验证了一个**尚未接入 VidScreen 产品**的候选：客户端 [Streamlink 8.6.1](https://github.com/streamlink/streamlink/releases/tag/8.6.1) 负责站点解析和连续取流，以 [`--stdout`](https://streamlink.github.io/cli.html#cmdoption-O) 输出容器字节；现有 JavaCV 用 `FFmpegFrameGrabber(InputStream, 0)` 直接从本地管道解码。试验禁用了 Streamlink 用户配置、插件缓存和第三方插件，没有读取 Cookie，也没有把媒体字节送到 Minecraft 服务端。进程有 35 秒看门狗及外层 48 秒上限，结束时子进程已退出。
+
+| 来源 | 替代管道的短时结果 |
+|---|---|
+| [B站直播 768756](https://live.bilibili.com/768756) | 成功：原生视频 1280×720、双声道；10 个视频帧、43 个音频帧，约 4.5 秒完成测试。 |
+| [抖音直播 941738836754](https://live.douyin.com/941738836754) | 成功：原生视频 1920×1080、双声道；10 个视频帧、18 个音频帧，约 3.7 秒完成测试。[Streamlink 抖音直播插件](https://github.com/streamlink/streamlink/blob/8.6.1/src/streamlink/plugins/douyin.py) 能匹配这个域名。 |
+| [苹果官方 HLS 样例](https://developer.apple.com/streaming/examples/) | 成功：HLS 经同一本地管道输出并解出 1920×1080 视频及双声道音频；10 个视频帧、15 个音频帧。这个样例用于验证 HLS 容器通路，不代表 Twitch 本次实测通过。 |
+| [Twitch imperialhal__](https://www.twitch.tv/imperialhal__) | 当次返回 `No playable streams found`；另试一个公开频道同样无流。插件是否能在当前环境取得正在直播的 Twitch 流仍需用在线房间验证。 |
+
+这是一个有价值的架构变化：媒体容器在客户端管道里交给同一解码器，直播不需要先拆出临时 CDN URL 再按点播位置 seek；音频和原生画质也能进入解码边界。本次只**解出了**音频样本，没有让 Minecraft 发声，也没有证明长时重连、音画同步、多客户端同步或带登录态的播放。
+
+代价同样具体：试验的隔离 Streamlink 环境安装了 22 个包，占约 46 MB，正式交付还需考虑 Python 运行时和平台包。原[媒体运行库决策](adr/0005-client-native-media-runtime.md)选择不要求普通玩家安装外部工具；是否将 Streamlink 管道做成可选客户端后端或替换默认路线，需要单独决定。Streamlink 进程仍会主动访问不可信页面及其媒体地址，因此正式版本仍需在实际连接处限制地址、跳转、凭据范围和资源占用。B站普通视频的分离 DASH 音视频问题，也不会由这个**直播**试验自动解决。
+
+## 2026-09-26：Streamlink 本地管道的替代路线实测
+
+重新评估单 URL 和手动跟踪 CDN 的实现后，使用官方 [Streamlink 8.6.1](https://github.com/streamlink/streamlink/releases/tag/8.6.1) 在项目忽略的临时目录做隔离试验。其 [`--stdout` 模式](https://streamlink.github.io/cli.html#cmdoption-O) 连续获取直播容器字节，JavaCV `FFmpegFrameGrabber(InputStream, 0)` 从本地管道解码。禁用 Streamlink 用户配置、插件缓存和第三方插件；没有读取浏览器或 Cookie。每个流有 35 秒看门狗和 48 秒外层超时，最终子进程均已退出。
+
+| 来源 | 本地管道结果 |
+|---|---|
+| [B站直播 768756](https://live.bilibili.com/768756) | 1280×720、双声道，10 个视频帧和 43 个音频帧；约 4.5 秒结束。 |
+| [抖音直播 941738836754](https://live.douyin.com/941738836754) | 1920×1080、双声道，10 个视频帧和 18 个音频帧；约 3.7 秒结束。[Streamlink 内置抖音直播插件](https://github.com/streamlink/streamlink/blob/8.6.1/src/streamlink/plugins/douyin.py) 可直接匹配该房间。 |
+| [苹果官方 HLS 样例](https://developer.apple.com/streaming/examples/) | 相同管道解出 1920×1080 视频及双声道：10 个视频帧、15 个音频帧。它验证了 HLS 通路；不代替 Twitch 直播测试。 |
+| [Twitch imperialhal__](https://www.twitch.tv/imperialhal__) | 当前返回 `No playable streams found`；另一个公开频道同样没有取到流。这不能证明当前 Twitch 房间的播放能力，也不能判定插件失败的具体原因。 |
+
+这是**取流与解码边界**的实验，不是 VidScreen 功能验收：现有 JavaCV 解码器仍在使用，但不再让它直接连接 provider/CDN；Streamlink 在客户端处理 B站 HLS/HTTP、抖音 FLV 等媒体请求后提供统一字节流。它绕过了此次两个直播因点播式 seek 而得到 0 帧的旧路径，并使音频样本与原生画质可进入客户端。然而 Minecraft 音频播放、画面上传、真人登录、直播重连、多人同步和长时运行均未在这个实验中完成。
+
+试验的隔离 Streamlink 环境有 22 个 Python 包，约 46 MB，**未包含**可独立再分发的 Python 解释器；正式客户端若采用这条路线，需要解决平台打包和许可。Streamlink 自身仍会发起网络请求，必须将不可信 URL、跳转与可能的 Cookie 限制在适当的连接边界。当前 MCEF 浏览器模组的[官方版本页](https://modrinth.com/mod/mcef/versions)未列出 Minecraft 26.2，因此不能把嵌入浏览器当作已验证的替代。此处只记录候选实测；尚未改动产品依赖或 [ADR 0005](adr/0005-client-native-media-runtime.md) 的默认方案。
